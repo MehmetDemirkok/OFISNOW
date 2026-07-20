@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { MaterialIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
 import { LoadingView } from "@/components/ui/LoadingView";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useAsyncData } from "@/hooks/useAsyncData";
 import { createCategory, fetchCategoryById, updateCategory } from "@/lib/api/catalog";
+import { showAlert } from "@/lib/alert";
 import { toFriendlyErrorMessage } from "@/lib/supabase";
 import { colors, radius, spacing, typography } from "@/constants/theme";
 
@@ -47,7 +48,7 @@ export default function CategoryFormScreen() {
       }
       router.back();
     } catch (err) {
-      Alert.alert("Hata", toFriendlyErrorMessage(err));
+      showAlert("Hata", toFriendlyErrorMessage(err));
     } finally {
       setSaving(false);
     }

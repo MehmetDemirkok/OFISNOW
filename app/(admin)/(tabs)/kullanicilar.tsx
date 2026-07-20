@@ -1,46 +1,103 @@
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { RefreshControl, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 
 import { AdminScreenHeader } from "@/components/admin/AdminScreenHeader";
+import { InviteCodeCard } from "@/components/admin/InviteCodeCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { LoadingView } from "@/components/ui/LoadingView";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
+import { useAuth } from "@/context/AuthContext";
 import { useAsyncData } from "@/hooks/useAsyncData";
-import { fetchEmployees, fetchWaiters } from "@/lib/api/profiles";
+import { fetchAllProfiles, updateProfile } from "@/lib/api/profiles";
+import { showAlert } from "@/lib/alert";
+import { toFriendlyErrorMessage } from "@/lib/supabase";
 import { colors, radius, spacing, typography } from "@/constants/theme";
-import type { Profile } from "@/types/database";
+import type { Profile, UserRole } from "@/types/database";
 
-function UserRow({ profile }: { profile: Profile }) {
+const ROLE_LABEL: Record<UserRole, string> = {
+  employee: "Çalışan",
+  waiter: "Garson",
+  admin: "Admin",
+};
+
+const ROLE_ORDER: UserRole[] = ["employee", "waiter", "admin"];
+
+function UserRow({
+  profile,
+  isSelf,
+  onChangeRole,
+  onToggleActive,
+}: {
+  profile: Profile;
+  isSelf: boolean;
+  onChangeRole: (role: UserRole) => void;
+  onToggleActive: (value: boolean) => void;
+}) {
   return (
-    <View style={styles.row}>
-      <View style={styles.avatar}>
-        <MaterialIcons name="person" size={20} color={colors.primary} />
-      </View>
-      <View style={{ flex: 1 }}>
-        <Text style={styles.name}>{profile.full_name}</Text>
-        <Text style={styles.email}>{profile.email}</Text>
-      </View>
-      {!profile.is_active ? (
-        <View style={styles.inactiveBadge}>
-          <Text style={styles.inactiveText}>PASİF</Text>
+    <View style={[styles.row, !profile.is_active && styles.rowInactive]}>
+      <View style={styles.rowHeader}>
+        <View style={styles.avatar}>
+          <MaterialIcons name="person" size={20} color={colors.primary} />
         </View>
-      ) : null}
+        <View style={{ flex: 1 }}>
+          <Text style={styles.name}>
+            {profile.full_name}
+            {isSelf ? " (siz)" : ""}
+          </Text>
+          <Text style={styles.email}>{profile.email}</Text>
+        </View>
+        <Switch
+          value={profile.is_active}
+          onValueChange={onToggleActive}
+          disabled={isSelf}
+          trackColor={{ false: colors.outlineVariant, true: colors.primary }}
+        />
+      </View>
+
+      <View style={styles.chipRow}>
+        {ROLE_ORDER.map((role) => (
+          <View key={role} style={styles.chipWrapper}>
+            <Text
+              onPress={() => !isSelf && role !== profile.role && onChangeRole(role)}
+              style={[
+                styles.chip,
+                role === profile.role && styles.chipSelected,
+                isSelf && styles.chipDisabled,
+              ]}
+            >
+              {ROLE_LABEL[role]}
+            </Text>
+          </View>
+        ))}
+      </View>
     </View>
   );
 }
 
 export default function AdminUsersScreen() {
-  const employees = useAsyncData(fetchEmployees, []);
-  const waiters = useAsyncData(fetchWaiters, []);
+  const { profile: myProfile } = useAuth();
+  const { data: profiles, loading, error, refetch, refreshing } = useAsyncData(
+    fetchAllProfiles,
+    []
+  );
 
-  const loading = employees.loading || waiters.loading;
-  const error = employees.error || waiters.error;
-  const refreshing = employees.refreshing || waiters.refreshing;
+  async function handleChangeRole(id: string, role: UserRole) {
+    try {
+      await updateProfile(id, { role });
+      refetch();
+    } catch (err) {
+      showAlert("Hata", toFriendlyErrorMessage(err));
+    }
+  }
 
-  function refetchAll() {
-    employees.refetch();
-    waiters.refetch();
+  async function handleToggleActive(id: string, value: boolean) {
+    try {
+      await updateProfile(id, { is_active: value });
+      refetch();
+    } catch (err) {
+      showAlert("Hata", toFriendlyErrorMessage(err));
+    }
   }
 
   return (
@@ -50,29 +107,27 @@ export default function AdminUsersScreen() {
       {loading ? (
         <LoadingView />
       ) : error ? (
-        <ErrorState message={error} onRetry={refetchAll} />
+        <ErrorState message={error} onRetry={refetch} />
       ) : (
         <ScrollView
           contentContainerStyle={styles.content}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refetchAll} />}
+          refreshControl={<RefreshControl refreshing={!!refreshing} onRefresh={refetch} />}
         >
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Garsonlar ({waiters.data?.length ?? 0})</Text>
-            {waiters.data?.length ? (
-              waiters.data.map((p) => <UserRow key={p.id} profile={p} />)
-            ) : (
-              <EmptyState icon="group" title="Kayıtlı garson yok" />
-            )}
-          </View>
+          <InviteCodeCard />
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Çalışanlar ({employees.data?.length ?? 0})</Text>
-            {employees.data?.length ? (
-              employees.data.map((p) => <UserRow key={p.id} profile={p} />)
-            ) : (
-              <EmptyState icon="group" title="Kayıtlı çalışan yok" />
-            )}
-          </View>
+          {profiles?.length ? (
+            profiles.map((p) => (
+              <UserRow
+                key={p.id}
+                profile={p}
+                isSelf={p.id === myProfile?.id}
+                onChangeRole={(role) => handleChangeRole(p.id, role)}
+                onToggleActive={(value) => handleToggleActive(p.id, value)}
+              />
+            ))
+          ) : (
+            <EmptyState icon="group" title="Kayıtlı kullanıcı yok" />
+          )}
         </ScrollView>
       )}
     </ScreenContainer>
@@ -82,25 +137,24 @@ export default function AdminUsersScreen() {
 const styles = StyleSheet.create({
   content: {
     padding: spacing.md,
-    gap: spacing.lg,
+    gap: spacing.sm,
     paddingBottom: spacing.xl,
   },
-  section: {
-    gap: spacing.sm,
-  },
-  sectionTitle: {
-    ...typography.headlineSm,
-    color: colors.onSurface,
-  },
   row: {
-    flexDirection: "row",
-    alignItems: "center",
     gap: spacing.sm,
     backgroundColor: colors.surfaceContainerLowest,
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.outlineVariant,
     padding: spacing.sm,
+  },
+  rowInactive: {
+    opacity: 0.6,
+  },
+  rowHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
   },
   avatar: {
     width: 36,
@@ -118,14 +172,31 @@ const styles = StyleSheet.create({
     ...typography.labelMd,
     color: colors.onSurfaceVariant,
   },
-  inactiveBadge: {
-    backgroundColor: colors.errorContainer,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: radius.sm,
+  chipRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
   },
-  inactiveText: {
-    ...typography.labelMd,
-    color: colors.onErrorContainer,
+  chipWrapper: {
+    flex: 1,
+  },
+  chip: {
+    ...typography.labelLg,
+    textAlign: "center",
+    textTransform: "none",
+    letterSpacing: 0,
+    color: colors.onSurface,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+    borderRadius: radius.full,
+    paddingVertical: spacing.xs,
+    overflow: "hidden",
+  },
+  chipSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+    color: "#ffffff",
+  },
+  chipDisabled: {
+    opacity: 0.5,
   },
 });

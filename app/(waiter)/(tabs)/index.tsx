@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { router } from "expo-router";
-import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { WaiterOrderCard } from "@/components/waiter/WaiterOrderCard";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -10,6 +10,7 @@ import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useAsyncData } from "@/hooks/useAsyncData";
 import { useOrdersRealtime } from "@/hooks/useOrdersRealtime";
 import { claimOrder, completeOrder, fetchWaiterDashboard } from "@/lib/api/orders";
+import { showAlert } from "@/lib/alert";
 import { toFriendlyErrorMessage } from "@/lib/supabase";
 import { colors, spacing, typography } from "@/constants/theme";
 
@@ -29,7 +30,7 @@ export default function WaiterDashboardScreen() {
       await claimOrder(orderId);
       refetch();
     } catch (err) {
-      Alert.alert("Sipariş görülemedi", toFriendlyErrorMessage(err));
+      showAlert("Sipariş görülemedi", toFriendlyErrorMessage(err));
       refetch();
     } finally {
       setPendingIds((prev) => ({ ...prev, [orderId]: false }));
@@ -42,7 +43,7 @@ export default function WaiterDashboardScreen() {
       await completeOrder(orderId);
       refetch();
     } catch (err) {
-      Alert.alert("İşlem tamamlanamadı", toFriendlyErrorMessage(err));
+      showAlert("İşlem tamamlanamadı", toFriendlyErrorMessage(err));
       refetch();
     } finally {
       setPendingIds((prev) => ({ ...prev, [orderId]: false }));

@@ -12,7 +12,6 @@ export interface CartLine {
 interface CartContextValue {
   lines: CartLine[];
   totalCount: number;
-  totalPrice: number;
   getQuantity: (productId: string) => number;
   increment: (product: Product) => void;
   decrement: (productId: string) => void;
@@ -59,14 +58,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const clear = useCallback(() => setLines([]), []);
 
   const totalCount = useMemo(() => lines.reduce((sum, l) => sum + l.quantity, 0), [lines]);
-  const totalPrice = useMemo(
-    () => lines.reduce((sum, l) => sum + (l.product.price ?? 0) * l.quantity, 0),
-    [lines]
-  );
 
   const value = useMemo(
-    () => ({ lines, totalCount, totalPrice, getQuantity, increment, decrement, setSpecialRequest, clear }),
-    [lines, totalCount, totalPrice, getQuantity, increment, decrement, setSpecialRequest, clear]
+    () => ({ lines, totalCount, getQuantity, increment, decrement, setSpecialRequest, clear }),
+    [lines, totalCount, getQuantity, increment, decrement, setSpecialRequest, clear]
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

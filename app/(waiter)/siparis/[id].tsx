@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { MaterialIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
 import { ErrorState } from "@/components/ui/ErrorState";
@@ -10,6 +10,7 @@ import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useAsyncData } from "@/hooks/useAsyncData";
 import { claimOrder, completeOrder, fetchOrderById } from "@/lib/api/orders";
+import { showAlert } from "@/lib/alert";
 import { toFriendlyErrorMessage } from "@/lib/supabase";
 import { colors, radius, spacing, typography } from "@/constants/theme";
 
@@ -25,7 +26,7 @@ export default function WaiterOrderDetailScreen() {
       await claimOrder(order.id);
       refetch();
     } catch (err) {
-      Alert.alert("Sipariş görülemedi", toFriendlyErrorMessage(err));
+      showAlert("Sipariş görülemedi", toFriendlyErrorMessage(err));
       refetch();
     } finally {
       setProcessing(false);
@@ -39,7 +40,7 @@ export default function WaiterOrderDetailScreen() {
       await completeOrder(order.id);
       refetch();
     } catch (err) {
-      Alert.alert("İşlem tamamlanamadı", toFriendlyErrorMessage(err));
+      showAlert("İşlem tamamlanamadı", toFriendlyErrorMessage(err));
       refetch();
     } finally {
       setProcessing(false);

@@ -17,9 +17,6 @@ export function ProductCard({ product, quantity, onIncrement, onDecrement }: Pro
       <View style={styles.info}>
         <View style={styles.headerRow}>
           <Text style={styles.name}>{product.name}</Text>
-          {product.price != null ? (
-            <Text style={styles.price}>₺{product.price.toFixed(2)}</Text>
-          ) : null}
         </View>
         {product.description ? (
           <Text style={styles.description} numberOfLines={2}>
@@ -58,16 +55,6 @@ const styles = StyleSheet.create({
     ...typography.headlineSm,
     color: colors.onSurface,
     flexShrink: 1,
-  },
-  price: {
-    ...typography.labelLg,
-    color: colors.primary,
-    backgroundColor: colors.primaryFixed,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: radius.sm,
-    textTransform: "none",
-    letterSpacing: 0,
   },
   description: {
     ...typography.bodyMd,

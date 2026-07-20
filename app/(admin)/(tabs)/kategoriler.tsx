@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { Alert, FlatList, StyleSheet, View } from "react-native";
+import { FlatList, StyleSheet, View } from "react-native";
 
 import { AdminListRow } from "@/components/admin/AdminListRow";
 import { AdminScreenHeader } from "@/components/admin/AdminScreenHeader";
@@ -9,6 +9,7 @@ import { LoadingView } from "@/components/ui/LoadingView";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useAsyncData } from "@/hooks/useAsyncData";
 import { fetchAllCategories, updateCategory } from "@/lib/api/catalog";
+import { showAlert } from "@/lib/alert";
 import { toFriendlyErrorMessage } from "@/lib/supabase";
 import { spacing } from "@/constants/theme";
 
@@ -20,7 +21,7 @@ export default function AdminCategoriesScreen() {
       await updateCategory(id, { is_active: value });
       refetch();
     } catch (err) {
-      Alert.alert("Hata", toFriendlyErrorMessage(err));
+      showAlert("Hata", toFriendlyErrorMessage(err));
     }
   }
 

@@ -20,50 +20,50 @@ insert into public.locations (name, sort_order) values
   ('Resepsiyon', 5),
   ('Diğer', 6);
 
-insert into public.products (category_id, name, description, price)
-select id, 'Türk Kahvesi', 'Geleneksel yöntemle pişirilmiş, bol köpüklü.', 45.00
+insert into public.products (category_id, name, description)
+select id, 'Türk Kahvesi', 'Geleneksel yöntemle pişirilmiş, bol köpüklü.'
 from public.categories where name = 'Sıcak İçecekler';
 
-insert into public.products (category_id, name, description, price)
-select id, 'Filtre Kahve', 'Taze demlenmiş filtre kahve.', 55.00
+insert into public.products (category_id, name, description)
+select id, 'Filtre Kahve', 'Taze demlenmiş filtre kahve.'
 from public.categories where name = 'Sıcak İçecekler';
 
-insert into public.products (category_id, name, description, price)
-select id, 'Çay', 'Demli Türk çayı.', 20.00
+insert into public.products (category_id, name, description)
+select id, 'Çay', 'Demli Türk çayı.'
 from public.categories where name = 'Sıcak İçecekler';
 
-insert into public.products (category_id, name, description, price)
-select id, 'Espresso', 'Yoğun kıvamlı tek shot espresso.', 40.00
+insert into public.products (category_id, name, description)
+select id, 'Espresso', 'Yoğun kıvamlı tek shot espresso.'
 from public.categories where name = 'Sıcak İçecekler';
 
-insert into public.products (category_id, name, description, price)
-select id, 'Su', 'Soğuk şişe su.', 10.00
+insert into public.products (category_id, name, description)
+select id, 'Su', 'Soğuk şişe su.'
 from public.categories where name = 'Soğuk İçecekler';
 
-insert into public.products (category_id, name, description, price)
-select id, 'Soda', 'Soğuk maden sodası.', 15.00
+insert into public.products (category_id, name, description)
+select id, 'Soda', 'Soğuk maden sodası.'
 from public.categories where name = 'Soğuk İçecekler';
 
-insert into public.products (category_id, name, description, price)
-select id, 'Ice Latte', 'Buzlu sütlü kahve.', 60.00
+insert into public.products (category_id, name, description)
+select id, 'Ice Latte', 'Buzlu sütlü kahve.'
 from public.categories where name = 'Soğuk İçecekler';
 
-insert into public.products (category_id, name, description, price)
-select id, 'Meyve Suyu', 'Taze sıkılmış meyve suyu.', 35.00
+insert into public.products (category_id, name, description)
+select id, 'Meyve Suyu', 'Taze sıkılmış meyve suyu.'
 from public.categories where name = 'Soğuk İçecekler';
 
-insert into public.products (category_id, name, description, price)
-select id, 'Tost', 'Kaşarlı ve sucuklu tost.', 65.00
+insert into public.products (category_id, name, description)
+select id, 'Tost', 'Kaşarlı ve sucuklu tost.'
 from public.categories where name = 'Yemekler';
 
-insert into public.products (category_id, name, description, price)
-select id, 'Sandviç', 'Tavuklu ve sebzeli sandviç.', 70.00
+insert into public.products (category_id, name, description)
+select id, 'Sandviç', 'Tavuklu ve sebzeli sandviç.'
 from public.categories where name = 'Yemekler';
 
-insert into public.products (category_id, name, description, price)
-select id, 'Çikolata', 'Sütlü çikolata bar.', 25.00
+insert into public.products (category_id, name, description)
+select id, 'Çikolata', 'Sütlü çikolata bar.'
 from public.categories where name = 'Atıştırmalıklar';
 
-insert into public.products (category_id, name, description, price)
-select id, 'Kraker', 'Tuzlu kraker paketi.', 20.00
+insert into public.products (category_id, name, description)
+select id, 'Kraker', 'Tuzlu kraker paketi.'
 from public.categories where name = 'Atıştırmalıklar';

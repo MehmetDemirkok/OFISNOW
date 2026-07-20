@@ -5,11 +5,25 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase, toFriendlyErrorMessage } from "@/lib/supabase";
 import type { Profile } from "@/types/database";
 
+/**
+ * Kayıt olurken ya yeni bir şirket kurulur (kayıt olan kişi admin olur),
+ * ya da mevcut bir şirkete admin'in verdiği davet koduyla katılınır.
+ */
+export type SignUpCompanyInput =
+  | { mode: "create"; companyName: string }
+  | { mode: "join"; inviteCode: string; role: "employee" | "waiter" };
+
 interface AuthContextValue {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
+  signUp: (
+    fullName: string,
+    email: string,
+    password: string,
+    company: SignUpCompanyInput
+  ) => Promise<{ needsEmailConfirm: boolean }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -64,6 +78,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw new Error(toFriendlyErrorMessage(error));
   }, []);
 
+  const signUp = useCallback(
+    async (fullName: string, email: string, password: string, company: SignUpCompanyInput) => {
+      const metadata =
+        company.mode === "create"
+          ? { full_name: fullName, company_name: company.companyName }
+          : { full_name: fullName, invite_code: company.inviteCode, role: company.role };
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: metadata },
+      });
+      if (error) throw new Error(toFriendlyErrorMessage(error));
+      return { needsEmailConfirm: !data.session };
+    },
+    []
+  );
+
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
     setProfile(null);
@@ -76,8 +108,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [session, loadProfile]);
 
   const value = useMemo(
-    () => ({ session, profile, loading, signIn, signOut, refreshProfile }),
-    [session, profile, loading, signIn, signOut, refreshProfile]
+    () => ({ session, profile, loading, signIn, signUp, signOut, refreshProfile }),
+    [session, profile, loading, signIn, signUp, signOut, refreshProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

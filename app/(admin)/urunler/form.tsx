@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { MaterialIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import {
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -22,6 +21,7 @@ import {
   fetchProductById,
   updateProduct,
 } from "@/lib/api/catalog";
+import { showAlert } from "@/lib/alert";
 import { toFriendlyErrorMessage } from "@/lib/supabase";
 import { colors, radius, spacing, typography } from "@/constants/theme";
 
@@ -37,7 +37,6 @@ export default function ProductFormScreen() {
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [price, setPrice] = useState("");
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [isActive, setIsActive] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -46,7 +45,6 @@ export default function ProductFormScreen() {
     if (existing) {
       setName(existing.name);
       setDescription(existing.description ?? "");
-      setPrice(existing.price != null ? String(existing.price) : "");
       setCategoryId(existing.category_id);
       setIsActive(existing.is_active);
     }
@@ -64,12 +62,10 @@ export default function ProductFormScreen() {
     if (!canSave || !categoryId) return;
     setSaving(true);
     try {
-      const parsedPrice = price.trim() ? Number(price.replace(",", ".")) : null;
       if (isEdit) {
         await updateProduct(id, {
           name: name.trim(),
           description: description.trim() || null,
-          price: parsedPrice,
           category_id: categoryId,
           is_active: isActive,
         });
@@ -77,13 +73,12 @@ export default function ProductFormScreen() {
         await createProduct({
           name: name.trim(),
           description: description.trim() || null,
-          price: parsedPrice,
           category_id: categoryId,
         });
       }
       router.back();
     } catch (err) {
-      Alert.alert("Hata", toFriendlyErrorMessage(err));
+      showAlert("Hata", toFriendlyErrorMessage(err));
     } finally {
       setSaving(false);
     }
@@ -121,17 +116,6 @@ export default function ProductFormScreen() {
             onChangeText={setDescription}
             placeholder="Kısa açıklama (opsiyonel)"
             multiline
-          />
-        </View>
-
-        <View style={styles.field}>
-          <Text style={styles.label}>Fiyat (₺)</Text>
-          <TextInput
-            style={styles.input}
-            value={price}
-            onChangeText={setPrice}
-            placeholder="45.00"
-            keyboardType="decimal-pad"
           />
         </View>
 

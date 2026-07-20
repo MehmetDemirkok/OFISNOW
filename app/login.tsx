@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import { Redirect, router } from "expo-router";
 
 import { Button } from "@/components/ui/Button";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
@@ -16,7 +18,7 @@ import { useAuth } from "@/context/AuthContext";
 import { colors, radius, spacing, typography } from "@/constants/theme";
 
 export default function LoginScreen() {
-  const { signIn } = useAuth();
+  const { session, signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -37,6 +39,8 @@ export default function LoginScreen() {
       setSubmitting(false);
     }
   }
+
+  if (session) return <Redirect href="/" />;
 
   return (
     <ScreenContainer>
@@ -115,6 +119,10 @@ export default function LoginScreen() {
               loading={submitting}
               style={{ marginTop: spacing.sm }}
             />
+
+            <Pressable onPress={() => router.push("/register")} hitSlop={8} style={styles.registerLink}>
+              <Text style={styles.registerLinkText}>Hesabın yok mu? Kayıt ol</Text>
+            </Pressable>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -191,5 +199,13 @@ const styles = StyleSheet.create({
     ...typography.bodyMd,
     color: colors.onErrorContainer,
     flexShrink: 1,
+  },
+  registerLink: {
+    alignItems: "center",
+    marginTop: spacing.xs,
+  },
+  registerLinkText: {
+    ...typography.bodyMd,
+    color: colors.primary,
   },
 });

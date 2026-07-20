@@ -8,6 +8,8 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
 import { useNotifications } from "@/hooks/useNotifications";
+import { AccountCorner } from "@/components/ui/AccountCorner";
+import { AppAlert } from "@/components/ui/AppAlert";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -24,13 +26,18 @@ function RootNavigator() {
   if (loading) return null;
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="index" />
-      <Stack.Screen name="login" />
-      <Stack.Screen name="(employee)" />
-      <Stack.Screen name="(waiter)" />
-      <Stack.Screen name="(admin)" />
-    </Stack>
+    <>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="login" />
+        <Stack.Screen name="register" />
+        <Stack.Screen name="(employee)" />
+        <Stack.Screen name="(waiter)" />
+        <Stack.Screen name="(admin)" />
+      </Stack>
+      <AccountCorner />
+      <AppAlert />
+    </>
   );
 }
 

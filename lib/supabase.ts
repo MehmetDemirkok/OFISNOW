@@ -59,6 +59,18 @@ export function toFriendlyErrorMessage(error: unknown): string {
   if (message.includes("FORBIDDEN")) {
     return "Bu işlem için yetkiniz yok.";
   }
+  if (message.includes("INVALID_INVITE_CODE")) {
+    return "Davet kodu geçersiz. Lütfen şirketinizin admin'inden doğru kodu isteyin.";
+  }
+  if (message.includes("COMPANY_INFO_REQUIRED")) {
+    return "Şirket adı veya davet kodu girmelisiniz.";
+  }
+  if (message.includes("INVALID_LOCATION")) {
+    return "Seçilen konum artık geçerli değil.";
+  }
+  if (message.includes("User already registered")) {
+    return "Bu e-posta adresiyle zaten bir hesap var.";
+  }
 
   return "Bir şeyler ters gitti. Lütfen tekrar deneyin.";
 }

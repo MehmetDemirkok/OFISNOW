@@ -41,7 +41,7 @@ Deno.serve(async (req: Request) => {
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .select(
-        `id, custom_location,
+        `id, custom_location, company_id,
          employee:profiles!orders_employee_id_fkey(full_name),
          location:locations(name),
          order_items(product_name, quantity)`
@@ -54,11 +54,14 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ error: "ORDER_NOT_FOUND" }, 404);
     }
 
+    // Service role RLS'i atlar; bildirim yalnızca siparişin ait olduğu şirketin
+    // garsonlarına gitmeli, başka şirketlerin garsonlarına sızmamalı.
     const { data: waiters, error: waitersError } = await supabase
       .from("profiles")
       .select("id, push_token")
       .eq("role", "waiter")
       .eq("is_active", true)
+      .eq("company_id", order.company_id)
       .not("push_token", "is", null);
 
     if (waitersError) {

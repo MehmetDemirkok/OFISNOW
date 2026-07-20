@@ -24,24 +24,24 @@ için canlıya almak üzere aşağıdaki adımları izleyin.
 Ardından örnek verileri yüklemek için `supabase/seed.sql` dosyasını çalıştırın
 (kategoriler, konumlar, örnek ürünler).
 
-## 3) Kullanıcı oluşturma (çalışan / garson / admin)
+## 3) Kullanıcı oluşturma (çok kiracılı / multi-tenant)
 
-Güvenlik nedeniyle **Service Role Key mobil uygulamaya asla eklenmez**; bu
-yüzden kullanıcılar mobil uygulama içinden değil, Supabase Dashboard >
-Authentication > Users > "Add user" üzerinden (veya Admin API ile sunucu
-tarafında) oluşturulur. Kullanıcı oluştururken **User Metadata** alanına rolü
-belirtin, örnek:
+Kullanıcılar artık mobil uygulamanın kendi kayıt ekranından (`/register`)
+oluşturulur — Dashboard'dan manuel "Add user" akışı **kullanılmaz**. İki mod
+vardır:
 
-```json
-{ "full_name": "Ahmet Yılmaz", "role": "waiter" }
-```
+- **Yeni Şirket Kur**: Ad Soyad + E-posta + Şifre + Şirket Adı girilir.
+  Kaydolan kişi otomatik olarak o şirketin **admin**'i olur ve şirket için
+  benzersiz bir davet kodu üretilir (`companies.invite_code`).
+- **Davet Koduyla Katıl**: Admin'in paylaştığı davet kodu + Ad Soyad +
+  E-posta + Şifre + rol seçimi (**employee** ya da **waiter**) girilir.
+  `handle_new_user` tetikleyicisi davet kodunu şirkete çözümleyip
+  `public.profiles` satırını (doğru `company_id` ve `role` ile) otomatik
+  oluşturur.
 
-`role` alanı `employee`, `waiter` veya `admin` olabilir (belirtilmezse
-`employee` varsayılır). `public.profiles` tablosuna karşılık gelen satır,
-`handle_new_user` tetikleyicisi ile otomatik oluşturulur.
-
-Üç garson hesabını bu şekilde oluşturun; her biri uygulamaya kendi
-e-posta/şifresiyle giriş yapacaktır.
+Admin, kendi şirketinin davet kodunu **Kullanıcılar** sekmesindeki davet kodu
+kartından görüp kopyalayabilir veya gerekirse yenileyebilir
+(`regenerate_invite_code` RPC'si).
 
 ## 4) Push bildirimleri için Edge Function'ı deploy edin
 
@@ -102,3 +102,18 @@ npx expo run:android
   iptal) veritabanındaki `SECURITY DEFINER` fonksiyonlar üzerinden yapılır;
   bu sayede iki garsonun aynı siparişi aynı anda "görmesi" gibi yarış
   durumları (race condition) tek bir atomik `UPDATE` ile güvenle engellenir.
+
+
+## Demo hesapları
+
+Şirket: **OfisNow Demo** — davet kodu: `4C56604A`
+
+┌──────────┬─────────────────────┬───────────┐
+│   Rol    │       E-posta       │   Şifre   │
+├──────────┼─────────────────────┼───────────┤
+│ admin    │ admin@ofisnow.com   │ Test1234! │
+├──────────┼─────────────────────┼───────────┤
+│ employee │ calisan@ofisnow.com │ Test1234! │
+├──────────┼─────────────────────┼───────────┤
+│ waiter   │ garson@ofisnow.com  │ Test1234! │
+└──────────┴─────────────────────┴───────────┘

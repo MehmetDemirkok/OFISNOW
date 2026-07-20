@@ -2,7 +2,6 @@ import { useRef, useState } from "react";
 import { MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -23,12 +22,13 @@ import { useAsyncData } from "@/hooks/useAsyncData";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { fetchLocations } from "@/lib/api/catalog";
 import { createOrder } from "@/lib/api/orders";
+import { showAlert } from "@/lib/alert";
 import { toFriendlyErrorMessage } from "@/lib/supabase";
 import { colors, radius, spacing, typography } from "@/constants/theme";
 import type { CartItemInput } from "@/types/database";
 
 export default function NewOrderScreen() {
-  const { lines, totalPrice, increment, decrement, setSpecialRequest, clear } = useCart();
+  const { lines, increment, decrement, setSpecialRequest, clear } = useCart();
   const { data: locations, loading, error, refetch } = useAsyncData(fetchLocations, []);
   const isConnected = useNetworkStatus();
 
@@ -67,7 +67,7 @@ export default function NewOrderScreen() {
       });
 
       clear();
-      Alert.alert("Siparişiniz alındı", "Siparişiniz garsonlara iletildi.", [
+      showAlert("Siparişiniz alındı", "Siparişiniz garsonlara iletildi.", [
         { text: "Tamam", onPress: () => router.replace("/(employee)") },
       ]);
     } catch (err) {
@@ -147,13 +147,6 @@ export default function NewOrderScreen() {
               multiline
             />
           </View>
-
-          {totalPrice > 0 ? (
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Toplam</Text>
-              <Text style={styles.totalValue}>₺{totalPrice.toFixed(2)}</Text>
-            </View>
-          ) : null}
 
           {submitError ? (
             <View style={styles.errorBox}>
@@ -246,21 +239,6 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
     ...typography.bodyLg,
     color: colors.onSurface,
-  },
-  totalRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingTop: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.outlineVariant,
-  },
-  totalLabel: {
-    ...typography.headlineSm,
-    color: colors.onSurface,
-  },
-  totalValue: {
-    ...typography.headlineSm,
-    color: colors.primary,
   },
   errorBox: {
     flexDirection: "row",

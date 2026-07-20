@@ -4,8 +4,16 @@
 export type UserRole = "employee" | "waiter" | "admin";
 export type OrderStatus = "new" | "seen" | "completed" | "cancelled";
 
+export interface Company {
+  id: string;
+  name: string;
+  invite_code: string;
+  created_at: string;
+}
+
 export interface Profile {
   id: string;
+  company_id: string;
   full_name: string;
   email: string;
   role: UserRole;
@@ -17,6 +25,7 @@ export interface Profile {
 
 export interface Category {
   id: string;
+  company_id: string;
   name: string;
   sort_order: number;
   is_active: boolean;
@@ -25,20 +34,33 @@ export interface Category {
 
 export interface Product {
   id: string;
+  company_id: string;
   category_id: string;
   name: string;
   description: string | null;
-  price: number | null;
   is_active: boolean;
   created_at: string;
 }
 
 export interface Location {
   id: string;
+  company_id: string;
   name: string;
   is_active: boolean;
   sort_order: number;
   created_at: string;
+}
+
+export interface LocationContact {
+  id: string;
+  location_id: string;
+  full_name: string;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface LocationWithContacts extends Location {
+  contacts: LocationContact[];
 }
 
 export interface OrderItem {
@@ -53,6 +75,7 @@ export interface OrderItem {
 
 export interface Order {
   id: string;
+  company_id: string;
   order_number: number;
   employee_id: string;
   status: OrderStatus;

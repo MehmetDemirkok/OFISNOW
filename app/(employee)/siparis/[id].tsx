@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { MaterialIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
 import { ErrorState } from "@/components/ui/ErrorState";
@@ -9,6 +9,7 @@ import { LoadingView } from "@/components/ui/LoadingView";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useAsyncData } from "@/hooks/useAsyncData";
 import { cancelOrder, fetchOrderById } from "@/lib/api/orders";
+import { showAlert } from "@/lib/alert";
 import { toFriendlyErrorMessage } from "@/lib/supabase";
 import { colors, employeeStatusLabels, radius, spacing, typography } from "@/constants/theme";
 
@@ -19,7 +20,7 @@ export default function EmployeeOrderDetailScreen() {
 
   async function handleCancel() {
     if (!order) return;
-    Alert.alert("Siparişi iptal et", "Bu siparişi iptal etmek istediğinize emin misiniz?", [
+    showAlert("Siparişi iptal et", "Bu siparişi iptal etmek istediğinize emin misiniz?", [
       { text: "Vazgeç", style: "cancel" },
       {
         text: "İptal Et",
@@ -30,7 +31,7 @@ export default function EmployeeOrderDetailScreen() {
             await cancelOrder(order.id);
             refetch();
           } catch (err) {
-            Alert.alert("Hata", toFriendlyErrorMessage(err));
+            showAlert("Hata", toFriendlyErrorMessage(err));
           } finally {
             setCancelling(false);
           }
