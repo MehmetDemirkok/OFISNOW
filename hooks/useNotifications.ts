@@ -24,7 +24,7 @@ async function ensureAndroidChannel() {
   await Notifications.setNotificationChannelAsync(NEW_ORDER_CHANNEL_ID, {
     name: "Yeni Sipariş",
     importance: Notifications.AndroidImportance.HIGH,
-    sound: "new-order.wav",
+    sound: "new_order.wav",
     vibrationPattern: [0, 250, 150, 250],
     lightColor: "#00236f",
     bypassDnd: false,

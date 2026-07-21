@@ -99,7 +99,7 @@ Deno.serve(async (req: Request) => {
       to: w.push_token,
       title,
       body,
-      sound: "new-order.wav",
+      sound: "new_order.wav",
       channelId: "new-order",
       priority: "high",
       data: { orderId: order.id, type: isPickup ? "pickup_request" : isCall ? "waiter_call" : "new_order" },

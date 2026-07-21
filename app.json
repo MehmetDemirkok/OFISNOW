@@ -47,7 +47,7 @@
           "icon": "./assets/android-icon-monochrome.png",
           "color": "#00236f",
           "sounds": [
-            "./assets/sounds/new-order.wav"
+            "./assets/sounds/new_order.wav"
           ],
           "mode": "production"
         }
