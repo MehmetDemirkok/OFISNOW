@@ -20,6 +20,12 @@ için canlıya almak üzere aşağıdaki adımları izleyin.
 2. `20260720000002_rls_policies.sql` — Row Level Security politikaları
 3. `20260720000003_functions.sql` — `create_order`, `claim_order`, `complete_order`, `cancel_order`, `update_my_push_token`
 4. `20260720000004_realtime.sql` — `orders` tablosunu realtime yayınına ekler
+5. `20260720000005_drop_product_price.sql` — ürünlerden fiyat kolonunu kaldırır
+6. `20260720000006_location_contacts.sql` — konum başına kişi dizini
+7. `20260721000001_multi_tenant.sql` — çok kiracılı (multi-tenant) `companies` yapısına geçiş
+8. `20260721000002_harden_security_definer_functions.sql` — `SECURITY DEFINER` fonksiyonlarda `search_path` sabitleme
+9. `20260721000003_revoke_anon_execute.sql` — RPC fonksiyonlarına `anon` erişimini kaldırma
+10. `20260721000004_remove_admin_role.sql` — **admin** rolünü kaldırır; kategori/ürün/konum yönetimi garson rolüne geçer
 
 Ardından örnek verileri yüklemek için `supabase/seed.sql` dosyasını çalıştırın
 (kategoriler, konumlar, örnek ürünler).
@@ -31,17 +37,18 @@ oluşturulur — Dashboard'dan manuel "Add user" akışı **kullanılmaz**. İki
 vardır:
 
 - **Yeni Şirket Kur**: Ad Soyad + E-posta + Şifre + Şirket Adı girilir.
-  Kaydolan kişi otomatik olarak o şirketin **admin**'i olur ve şirket için
+  Kaydolan kişi otomatik olarak o şirketin **garson**'u olur ve şirket için
   benzersiz bir davet kodu üretilir (`companies.invite_code`).
-- **Davet Koduyla Katıl**: Admin'in paylaştığı davet kodu + Ad Soyad +
+- **Davet Koduyla Katıl**: Garsonun paylaştığı davet kodu + Ad Soyad +
   E-posta + Şifre + rol seçimi (**employee** ya da **waiter**) girilir.
   `handle_new_user` tetikleyicisi davet kodunu şirkete çözümleyip
   `public.profiles` satırını (doğru `company_id` ve `role` ile) otomatik
   oluşturur.
 
-Admin, kendi şirketinin davet kodunu **Kullanıcılar** sekmesindeki davet kodu
-kartından görüp kopyalayabilir veya gerekirse yenileyebilir
-(`regenerate_invite_code` RPC'si).
+Garson, kendi şirketinin davet kodunu uygulamanın sağ üstündeki hesap
+rozetinden görüp kopyalayabilir. Kategori/ürün/konum yönetimi de garson
+rolünün kendi sekmelerinden (Ürünler, Kategoriler, Konumlar) yapılır; ayrı
+bir admin veya kullanıcı yönetimi ekranı yoktur.
 
 ## 4) Push bildirimleri için Edge Function'ı deploy edin
 
@@ -110,8 +117,6 @@ npx expo run:android
 
 ┌──────────┬─────────────────────┬───────────┐
 │   Rol    │       E-posta       │   Şifre   │
-├──────────┼─────────────────────┼───────────┤
-│ admin    │ admin@ofisnow.com   │ Test1234! │
 ├──────────┼─────────────────────┼───────────┤
 │ employee │ calisan@ofisnow.com │ Test1234! │
 ├──────────┼─────────────────────┼───────────┤

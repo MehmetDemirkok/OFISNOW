@@ -23,7 +23,7 @@ type JoinRole = "employee" | "waiter";
 
 const JOIN_ROLE_LABEL: Record<JoinRole, string> = {
   employee: "Çalışan",
-  waiter: "Garson",
+  waiter: "Görevli",
 };
 
 export default function RegisterScreen() {
@@ -36,16 +36,20 @@ export default function RegisterScreen() {
   const [companyName, setCompanyName] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [joinRole, setJoinRole] = useState<JoinRole>("employee");
+  const [locationDescription, setLocationDescription] = useState("");
 
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const baseValid =
     fullName.trim().length > 1 && email.trim().length > 3 && password.length >= 6 && !submitting;
+  const needsLocation = mode === "join" && joinRole === "employee";
   const canSubmit =
     mode === "create"
       ? baseValid && companyName.trim().length > 1
-      : baseValid && inviteCode.trim().length >= 4;
+      : baseValid &&
+        inviteCode.trim().length >= 4 &&
+        (!needsLocation || locationDescription.trim().length > 0);
 
   if (session) return <Redirect href="/" />;
 
@@ -60,7 +64,14 @@ export default function RegisterScreen() {
         password,
         mode === "create"
           ? { mode: "create", companyName: companyName.trim() }
-          : { mode: "join", inviteCode: inviteCode.trim(), role: joinRole }
+          : joinRole === "employee"
+            ? {
+                mode: "join",
+                inviteCode: inviteCode.trim(),
+                role: "employee",
+                locationDescription: locationDescription.trim(),
+              }
+            : { mode: "join", inviteCode: inviteCode.trim(), role: "waiter" }
       );
       if (needsEmailConfirm) {
         showAlert(
@@ -186,27 +197,30 @@ export default function RegisterScreen() {
                   />
                 </View>
                 <Text style={styles.hint}>
-                  Şirketi ilk sen kuruyorsun — otomatik olarak yönetici (admin) olacaksın.
+                  Şirketi ilk sen kuruyorsun — katalog, konum ve davet kodu yönetimi otomatik olarak sende olacak.
                 </Text>
               </View>
             ) : (
               <>
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Davet Kodu</Text>
+                  <Text style={styles.inputLabel}>Hangi Şirkete Katılıyorsun?</Text>
                   <View style={styles.inputWrapper}>
                     <MaterialIcons name="vpn-key" size={20} color={colors.outline} />
                     <TextInput
                       style={styles.input}
                       value={inviteCode}
                       onChangeText={(v) => setInviteCode(v.toUpperCase())}
-                      placeholder="Örn. F9FBB192"
+                      placeholder="Davet Kodu, örn. F9FBB192"
                       placeholderTextColor={colors.outline}
                       autoCapitalize="characters"
                       onSubmitEditing={handleSubmit}
                       returnKeyType="go"
                     />
                   </View>
-                  <Text style={styles.hint}>Bu kodu şirketinizin admin'inden alabilirsiniz.</Text>
+                  <Text style={styles.hint}>
+                    Şirketindeki bir çalışandan aldığın davet kodunu gir — hangi şirketin çalışanı olduğunu
+                    bu kod belirler.
+                  </Text>
                 </View>
 
                 <View style={styles.inputGroup}>
@@ -226,7 +240,32 @@ export default function RegisterScreen() {
                       </Pressable>
                     ))}
                   </View>
+                  <Text style={styles.hint}>
+                    {joinRole === "waiter"
+                      ? "Görevli seçersen kaydolur kaydolmaz doğrudan görevli ekranıyla başlarsın."
+                      : "Çalışan seçersen sipariş vermek için ana ekranı kullanırsın."}
+                  </Text>
                 </View>
+
+                {needsLocation ? (
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>Oda Tarifin</Text>
+                    <View style={[styles.inputWrapper, styles.inputWrapperMultiline]}>
+                      <MaterialIcons name="meeting-room" size={20} color={colors.outline} style={{ marginTop: 2 }} />
+                      <TextInput
+                        style={[styles.input, styles.inputMultiline]}
+                        value={locationDescription}
+                        onChangeText={setLocationDescription}
+                        placeholder="Örn. 3. kat, mutfağın karşısı, mavi kapı"
+                        placeholderTextColor={colors.outline}
+                        multiline
+                      />
+                    </View>
+                    <Text style={styles.hint}>
+                      Sipariş verirken ve görevli çağırırken bu tarif kullanılır.
+                    </Text>
+                  </View>
+                ) : null}
               </>
             )}
 
@@ -339,6 +378,14 @@ const styles = StyleSheet.create({
     flex: 1,
     ...typography.bodyLg,
     color: colors.onSurface,
+  },
+  inputWrapperMultiline: {
+    height: 84,
+    alignItems: "flex-start",
+    paddingVertical: spacing.sm,
+  },
+  inputMultiline: {
+    textAlignVertical: "top",
   },
   hint: {
     ...typography.labelMd,

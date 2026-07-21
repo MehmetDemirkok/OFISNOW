@@ -8,8 +8,9 @@ export async function fetchMyCompany(): Promise<Company> {
   return data as Company;
 }
 
-export async function regenerateInviteCode(): Promise<string> {
-  const { data, error } = await supabase.rpc("regenerate_invite_code");
+/** Şirketin davet kodunu döndürür; kod 10 dakikadan eskiyse otomatik olarak yeniler. Yalnızca employee çağırabilir. */
+export async function fetchOrRotateInviteCode(): Promise<string> {
+  const { data, error } = await supabase.rpc("get_or_rotate_invite_code");
   if (error) throw error;
   return data as string;
 }

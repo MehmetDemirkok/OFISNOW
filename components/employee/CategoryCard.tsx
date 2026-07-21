@@ -1,19 +1,31 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { categoryIcon } from "@/constants/categoryIcons";
-import { colors, radius, spacing, typography } from "@/constants/theme";
+import { categoryColor, categoryIcon } from "@/constants/categoryIcons";
+import { colors, radius, shadows, spacing, typography } from "@/constants/theme";
 
-export function CategoryCard({ name, onPress }: { name: string; onPress: () => void }) {
+export function CategoryCard({
+  name,
+  index = 0,
+  onPress,
+}: {
+  name: string;
+  index?: number;
+  onPress: () => void;
+}) {
+  const { bg, fg } = categoryColor(index);
+
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}
     >
-      <View style={styles.iconCircle}>
-        <MaterialIcons name={categoryIcon(name)} size={26} color={colors.primary} />
+      <View style={[styles.iconCircle, { backgroundColor: bg }]}>
+        <MaterialIcons name={categoryIcon(name)} size={26} color={fg} />
       </View>
-      <Text style={styles.name}>{name}</Text>
+      <Text style={styles.name} numberOfLines={2}>
+        {name}
+      </Text>
     </Pressable>
   );
 }
@@ -24,20 +36,19 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     backgroundColor: colors.surfaceContainerLowest,
     borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
     padding: spacing.md,
-    height: 128,
+    height: 132,
     justifyContent: "space-between",
+    ...shadows.sm,
   },
   pressed: {
     opacity: 0.85,
+    transform: [{ scale: 0.98 }],
   },
   iconCircle: {
-    width: 44,
-    height: 44,
+    width: 48,
+    height: 48,
     borderRadius: radius.full,
-    backgroundColor: colors.primaryFixed,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -46,5 +57,6 @@ const styles = StyleSheet.create({
     color: colors.onSurface,
     textTransform: "none",
     letterSpacing: 0,
+    fontSize: 14,
   },
 });

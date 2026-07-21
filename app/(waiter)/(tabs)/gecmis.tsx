@@ -20,6 +20,7 @@ export default function WaiterHistoryScreen() {
     <ScreenContainer>
       <View style={styles.header}>
         <Text style={styles.title}>Geçmiş Siparişler</Text>
+        <Text style={styles.subtitle}>Tamamlanan siparişleri görüntüleyin</Text>
       </View>
 
       {loading ? (
@@ -47,14 +48,22 @@ export default function WaiterHistoryScreen() {
 const styles = StyleSheet.create({
   header: {
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
+    gap: 2,
   },
   title: {
-    ...typography.headlineMd,
+    ...typography.headlineLg,
     color: colors.onSurface,
+  },
+  subtitle: {
+    ...typography.bodyMd,
+    color: colors.onSurfaceVariant,
   },
   listContent: {
     padding: spacing.md,
+    paddingTop: 0,
+    paddingBottom: 140,
     flexGrow: 1,
   },
 });

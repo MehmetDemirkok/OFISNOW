@@ -28,6 +28,8 @@ export function WaiterOrderCard({
 }: WaiterOrderCardProps) {
   const isNew = order.status === "new";
   const isSeen = order.status === "seen";
+  const isCall = order.order_type === "call";
+  const isPickup = order.order_type === "pickup";
 
   return (
     <Pressable
@@ -49,18 +51,30 @@ export function WaiterOrderCard({
         ) : null}
       </View>
 
-      <View style={styles.itemsBox}>
-        {order.order_items.map((item) => (
-          <View key={item.id}>
-            <Text style={styles.itemText}>
-              {item.quantity}x {item.product_name}
-            </Text>
-            {item.special_request ? (
-              <Text style={styles.specialText}>{item.special_request}</Text>
-            ) : null}
-          </View>
-        ))}
-      </View>
+      {isPickup ? (
+        <View style={styles.pickupBox}>
+          <MaterialIcons name="cleaning-services" size={18} color={colors.onSecondaryContainer} />
+          <Text style={styles.pickupText}>Boşları alabilir misiniz? Acelesi yok 🙂</Text>
+        </View>
+      ) : isCall ? (
+        <View style={styles.callBox}>
+          <MaterialIcons name="notifications-active" size={18} color={colors.tertiaryContainerText} />
+          <Text style={styles.callText}>Görevli çağrısı</Text>
+        </View>
+      ) : (
+        <View style={styles.itemsBox}>
+          {order.order_items.map((item) => (
+            <View key={item.id}>
+              <Text style={styles.itemText}>
+                {item.quantity}x {item.product_name}
+              </Text>
+              {item.special_request ? (
+                <Text style={styles.specialText}>{item.special_request}</Text>
+              ) : null}
+            </View>
+          ))}
+        </View>
+      )}
 
       <View style={styles.footerRow}>
         <View style={styles.locationRow}>
@@ -155,6 +169,33 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
     padding: spacing.sm,
     gap: 4,
+  },
+  callBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    backgroundColor: colors.tertiaryContainerBg,
+    borderRadius: radius.sm,
+    padding: spacing.sm,
+  },
+  callText: {
+    ...typography.bodyLg,
+    fontWeight: "700",
+    color: colors.tertiaryContainerText,
+  },
+  pickupBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    backgroundColor: colors.secondaryContainer,
+    borderRadius: radius.sm,
+    padding: spacing.sm,
+  },
+  pickupText: {
+    ...typography.bodyMd,
+    fontWeight: "600",
+    color: colors.onSecondaryContainer,
+    flexShrink: 1,
   },
   itemText: {
     ...typography.bodyLg,

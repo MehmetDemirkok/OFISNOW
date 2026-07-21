@@ -24,7 +24,7 @@ const styles = StyleSheet.create({
   badge: {
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
-    borderRadius: radius.sm,
+    borderRadius: radius.full,
   },
   text: {
     ...typography.labelLg,

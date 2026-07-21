@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase";
-import type { Category, Location, LocationContact, LocationWithContacts, Product } from "@/types/database";
+import type { Category, Product } from "@/types/database";
 
 export async function fetchCategories(): Promise<Category[]> {
   const { data, error } = await supabase
@@ -24,18 +24,7 @@ export async function fetchProductsByCategory(categoryId: string): Promise<Produ
   return data as Product[];
 }
 
-export async function fetchLocations(): Promise<Location[]> {
-  const { data, error } = await supabase
-    .from("locations")
-    .select("*")
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true });
-
-  if (error) throw error;
-  return data as Location[];
-}
-
-// ---- Admin: kategori yönetimi ----
+// ---- Çalışan: kategori yönetimi ----
 export async function fetchAllCategories(): Promise<Category[]> {
   const { data, error } = await supabase.from("categories").select("*").order("sort_order");
   if (error) throw error;
@@ -63,7 +52,7 @@ export async function deleteCategory(id: string): Promise<void> {
   if (error) throw error;
 }
 
-// ---- Admin: ürün yönetimi ----
+// ---- Çalışan: ürün yönetimi ----
 export async function fetchAllProducts(): Promise<Product[]> {
   const { data, error } = await supabase.from("products").select("*").order("name");
   if (error) throw error;
@@ -90,71 +79,7 @@ export async function updateProduct(id: string, patch: Partial<Product>) {
   if (error) throw error;
 }
 
-// ---- Admin: konum yönetimi ----
-export async function fetchAllLocations(): Promise<LocationWithContacts[]> {
-  const { data, error } = await supabase
-    .from("locations")
-    .select("*, contacts:location_contacts(*)")
-    .order("sort_order");
-  if (error) throw error;
-  return (data as any[]).map((row) => ({
-    ...row,
-    contacts: ((row.contacts ?? []) as LocationContact[]).sort((a, b) => a.sort_order - b.sort_order),
-  })) as LocationWithContacts[];
-}
-
-export async function fetchLocationById(id: string): Promise<Location> {
-  const { data, error } = await supabase.from("locations").select("*").eq("id", id).single();
-  if (error) throw error;
-  return data as Location;
-}
-
-export async function createLocation(input: { name: string; sort_order: number }): Promise<Location> {
-  const { data, error } = await supabase.from("locations").insert(input).select().single();
-  if (error) throw error;
-  return data as Location;
-}
-
-export async function updateLocation(id: string, patch: Partial<Location>) {
-  const { error } = await supabase.from("locations").update(patch).eq("id", id);
-  if (error) throw error;
-}
-
-export async function deleteLocation(id: string): Promise<void> {
-  const { error } = await supabase.from("locations").delete().eq("id", id);
-  if (error) throw error;
-}
-
-// ---- Admin: konum kişileri ----
-export async function fetchLocationContacts(locationId: string): Promise<LocationContact[]> {
-  const { data, error } = await supabase
-    .from("location_contacts")
-    .select("*")
-    .eq("location_id", locationId)
-    .order("sort_order");
-  if (error) throw error;
-  return data as LocationContact[];
-}
-
-export async function addLocationContact(locationId: string, fullName: string): Promise<LocationContact> {
-  const { data: existing } = await supabase
-    .from("location_contacts")
-    .select("sort_order")
-    .eq("location_id", locationId)
-    .order("sort_order", { ascending: false })
-    .limit(1);
-  const nextSortOrder = existing && existing.length > 0 ? existing[0].sort_order + 1 : 0;
-
-  const { data, error } = await supabase
-    .from("location_contacts")
-    .insert({ location_id: locationId, full_name: fullName, sort_order: nextSortOrder })
-    .select()
-    .single();
-  if (error) throw error;
-  return data as LocationContact;
-}
-
-export async function deleteLocationContact(id: string): Promise<void> {
-  const { error } = await supabase.from("location_contacts").delete().eq("id", id);
+export async function deleteProduct(id: string): Promise<void> {
+  const { error } = await supabase.from("products").delete().eq("id", id);
   if (error) throw error;
 }

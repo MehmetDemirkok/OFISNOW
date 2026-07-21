@@ -1,18 +1,34 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MaterialIcons } from "@expo/vector-icons";
+import * as Clipboard from "expo-clipboard";
 import { router } from "expo-router";
-import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Image,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAuth } from "@/context/AuthContext";
+import { useAsyncData } from "@/hooks/useAsyncData";
+import { fetchOrRotateInviteCode } from "@/lib/api/company";
+import { updateMyLocation } from "@/lib/api/profiles";
+import { showAlert } from "@/lib/alert";
+import { toFriendlyErrorMessage } from "@/lib/supabase";
 import { colors, radius, spacing, typography } from "@/constants/theme";
 import type { UserRole } from "@/types/database";
 
 const roleLabels: Record<UserRole, string> = {
-  admin: "Yönetici",
   employee: "Çalışan",
-  waiter: "Garson",
+  waiter: "Görevli",
 };
+
+const INVITE_CODE_REFRESH_MS = 10 * 60 * 1000;
 
 function getInitials(fullName: string) {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
@@ -22,17 +38,71 @@ function getInitials(fullName: string) {
 }
 
 export function AccountCorner() {
-  const { profile, signOut } = useAuth();
+  const { profile, signOut, refreshProfile } = useAuth();
   const insets = useSafeAreaInsets();
   const [open, setOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
+  const [editingLocation, setEditingLocation] = useState(false);
+  const [locationInput, setLocationInput] = useState("");
+  const [savingLocation, setSavingLocation] = useState(false);
+
+  const isEmployee = profile?.role === "employee";
+  const {
+    data: inviteCode,
+    refetch: refetchInviteCode,
+  } = useAsyncData(() => (isEmployee ? fetchOrRotateInviteCode() : Promise.resolve(null)), [isEmployee]);
+
+  // Davet kodu 10 dakikada bir kendiliğinden yenilenir; sheet her açıldığında da tazelenir.
+  useEffect(() => {
+    if (!isEmployee) return;
+    const interval = setInterval(() => refetchInviteCode(), INVITE_CODE_REFRESH_MS);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEmployee]);
+
+  useEffect(() => {
+    if (open && isEmployee) refetchInviteCode();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   if (!profile) return null;
+
+  async function handleCopyInviteCode() {
+    if (!inviteCode) return;
+    await Clipboard.setStringAsync(inviteCode);
+    setCodeCopied(true);
+    setTimeout(() => setCodeCopied(false), 1500);
+  }
+
+  function openLocationEditor() {
+    setLocationInput(profile?.location_description ?? "");
+    setEditingLocation(true);
+  }
+
+  async function handleSaveLocation() {
+    setSavingLocation(true);
+    try {
+      await updateMyLocation(locationInput.trim());
+      await refreshProfile();
+      setEditingLocation(false);
+    } catch (err) {
+      showAlert("Hata", toFriendlyErrorMessage(err));
+    } finally {
+      setSavingLocation(false);
+    }
+  }
+
+  function openProfile() {
+    setOpen(false);
+    router.push("/profile");
+  }
 
   function closeSheet() {
     setOpen(false);
     setConfirming(false);
+    setEditingLocation(false);
   }
 
   async function performSignOut() {
@@ -50,7 +120,11 @@ export function AccountCorner() {
   return (
     <View pointerEvents="box-none" style={[styles.overlay, { top: insets.top + spacing.xs }]}>
       <Pressable style={styles.badge} onPress={() => setOpen(true)} hitSlop={8}>
-        <Text style={styles.badgeText}>{getInitials(profile.full_name)}</Text>
+        {profile.avatar_url ? (
+          <Image source={{ uri: profile.avatar_url }} style={styles.badgeImage} />
+        ) : (
+          <Text style={styles.badgeText}>{getInitials(profile.full_name)}</Text>
+        )}
       </Pressable>
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={closeSheet}>
@@ -83,13 +157,22 @@ export function AccountCorner() {
               </>
             ) : (
               <>
-                <View style={styles.avatarLg}>
-                  <Text style={styles.avatarLgText}>{getInitials(profile.full_name)}</Text>
-                </View>
+                {profile.avatar_url ? (
+                  <Image source={{ uri: profile.avatar_url }} style={styles.avatarLgImage} />
+                ) : (
+                  <View style={styles.avatarLg}>
+                    <Text style={styles.avatarLgText}>{getInitials(profile.full_name)}</Text>
+                  </View>
+                )}
 
                 <Text style={styles.name} numberOfLines={1}>
                   {profile.full_name}
                 </Text>
+                {profile.job_title ? (
+                  <Text style={styles.jobTitle} numberOfLines={1}>
+                    {profile.job_title}
+                  </Text>
+                ) : null}
                 <Text style={styles.email} numberOfLines={1}>
                   {profile.email}
                 </Text>
@@ -97,6 +180,69 @@ export function AccountCorner() {
                 <View style={styles.roleChip}>
                   <Text style={styles.roleChipText}>{roleLabels[profile.role] ?? profile.role}</Text>
                 </View>
+
+                <Pressable style={styles.editProfileRow} onPress={openProfile} hitSlop={4}>
+                  <MaterialIcons name="edit" size={16} color={colors.primary} />
+                  <Text style={styles.editProfileText}>Profili Düzenle</Text>
+                </Pressable>
+
+                {isEmployee && inviteCode ? (
+                  <Pressable style={styles.inviteRow} onPress={handleCopyInviteCode} hitSlop={4}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.inviteLabel}>Davet Kodu (10 dk'da bir yenilenir)</Text>
+                      <Text style={styles.inviteCode}>{inviteCode}</Text>
+                    </View>
+                    <MaterialIcons
+                      name={codeCopied ? "check" : "content-copy"}
+                      size={18}
+                      color={codeCopied ? colors.success : colors.primary}
+                    />
+                  </Pressable>
+                ) : null}
+
+                {isEmployee && editingLocation ? (
+                  <View style={styles.locationEditBox}>
+                    <TextInput
+                      style={[styles.locationInput, styles.locationInputMultiline]}
+                      value={locationInput}
+                      onChangeText={setLocationInput}
+                      placeholder="Örn. 3. kat, mutfağın karşısı, mavi kapı"
+                      placeholderTextColor={colors.outline}
+                      multiline
+                      autoFocus
+                    />
+                    <View style={styles.locationEditButtons}>
+                      <Pressable
+                        style={styles.locationCancelButton}
+                        onPress={() => setEditingLocation(false)}
+                        disabled={savingLocation}
+                      >
+                        <Text style={styles.locationCancelText}>Vazgeç</Text>
+                      </Pressable>
+                      <Pressable
+                        style={styles.locationSaveButton}
+                        onPress={handleSaveLocation}
+                        disabled={savingLocation}
+                      >
+                        {savingLocation ? (
+                          <ActivityIndicator color="#ffffff" size="small" />
+                        ) : (
+                          <Text style={styles.locationSaveText}>Kaydet</Text>
+                        )}
+                      </Pressable>
+                    </View>
+                  </View>
+                ) : isEmployee ? (
+                  <Pressable style={styles.inviteRow} onPress={openLocationEditor} hitSlop={4}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.inviteLabel}>Oda Tarifiniz</Text>
+                      <Text style={styles.locationText} numberOfLines={2}>
+                        {profile.location_description?.trim() || "Belirtilmemiş"}
+                      </Text>
+                    </View>
+                    <MaterialIcons name="edit" size={18} color={colors.primary} />
+                  </Pressable>
+                ) : null}
 
                 <Pressable style={styles.logoutButton} onPress={() => setConfirming(true)}>
                   <MaterialIcons name="logout" size={20} color={colors.error} />
@@ -141,6 +287,11 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontWeight: "700",
   },
+  badgeImage: {
+    width: "100%",
+    height: "100%",
+    borderRadius: radius.full,
+  },
   backdrop: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.35)",
@@ -173,6 +324,24 @@ const styles = StyleSheet.create({
     ...typography.headlineMd,
     color: "#ffffff",
   },
+  avatarLgImage: {
+    width: 56,
+    height: 56,
+    borderRadius: radius.full,
+    marginBottom: spacing.xs,
+    backgroundColor: colors.surfaceContainer,
+  },
+  editProfileRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    marginBottom: spacing.sm,
+  },
+  editProfileText: {
+    ...typography.labelMd,
+    color: colors.primary,
+    fontWeight: "700",
+  },
   name: {
     ...typography.bodyLg,
     fontWeight: "700",
@@ -183,6 +352,13 @@ const styles = StyleSheet.create({
   email: {
     ...typography.bodyMd,
     color: colors.onSurfaceVariant,
+    textAlign: "center",
+    maxWidth: "100%",
+  },
+  jobTitle: {
+    ...typography.labelMd,
+    color: colors.primary,
+    fontWeight: "600",
     textAlign: "center",
     maxWidth: "100%",
   },
@@ -204,6 +380,82 @@ const styles = StyleSheet.create({
   roleChipText: {
     ...typography.labelMd,
     color: colors.primary,
+    fontWeight: "700",
+  },
+  inviteRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    width: "100%",
+    backgroundColor: colors.surfaceContainer,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  inviteLabel: {
+    ...typography.labelMd,
+    color: colors.onSurfaceVariant,
+  },
+  inviteCode: {
+    ...typography.bodyLg,
+    fontWeight: "700",
+    letterSpacing: 2,
+    color: colors.onSurface,
+  },
+  locationText: {
+    ...typography.bodyMd,
+    fontWeight: "600",
+    color: colors.onSurface,
+  },
+  locationEditBox: {
+    width: "100%",
+    gap: spacing.xs,
+    marginBottom: spacing.sm,
+  },
+  locationInput: {
+    height: 40,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+    paddingHorizontal: spacing.sm,
+    backgroundColor: colors.surfaceContainerLowest,
+    ...typography.bodyMd,
+    color: colors.onSurface,
+  },
+  locationInputMultiline: {
+    height: 72,
+    paddingTop: spacing.sm,
+    textAlignVertical: "top",
+  },
+  locationEditButtons: {
+    flexDirection: "row",
+    gap: spacing.xs,
+  },
+  locationCancelButton: {
+    flex: 1,
+    height: 36,
+    borderRadius: radius.sm,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.surfaceContainerHigh,
+  },
+  locationCancelText: {
+    ...typography.labelMd,
+    color: colors.onSurfaceVariant,
+    fontWeight: "700",
+  },
+  locationSaveButton: {
+    flex: 1,
+    height: 36,
+    borderRadius: radius.sm,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.primary,
+  },
+  locationSaveText: {
+    ...typography.labelMd,
+    color: "#ffffff",
     fontWeight: "700",
   },
   logoutButton: {

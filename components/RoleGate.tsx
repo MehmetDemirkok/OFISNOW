@@ -5,7 +5,7 @@ import { LoadingView } from "@/components/ui/LoadingView";
 import { useAuth } from "@/context/AuthContext";
 import type { UserRole } from "@/types/database";
 
-/** İlgili rol grubunun (employee/waiter/admin) dışından erişimi engeller. */
+/** İlgili rol grubunun (employee/waiter) dışından erişimi engeller. */
 export function RoleGate({ allow, children }: { allow: UserRole[]; children: ReactNode }) {
   const { loading, session, profile } = useAuth();
 
@@ -15,7 +15,6 @@ export function RoleGate({ allow, children }: { allow: UserRole[]; children: Rea
 
   if (!allow.includes(profile.role)) {
     if (profile.role === "waiter") return <Redirect href="/(waiter)" />;
-    if (profile.role === "admin") return <Redirect href="/(admin)" />;
     return <Redirect href="/(employee)" />;
   }
 

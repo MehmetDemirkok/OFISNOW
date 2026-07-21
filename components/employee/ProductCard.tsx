@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
-import { colors, radius, spacing, typography } from "@/constants/theme";
+import { colors, radius, shadows, spacing, typography } from "@/constants/theme";
 import type { Product } from "@/types/database";
 
 interface ProductCardProps {
@@ -35,12 +35,11 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.surfaceContainerLowest,
     borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
     padding: spacing.md,
+    ...shadows.sm,
   },
   cardActive: {
-    borderColor: colors.primary,
+    backgroundColor: colors.primaryFixed,
   },
   info: {
     gap: spacing.xs,

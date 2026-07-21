@@ -1,12 +1,12 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import type { StyleProp, ViewStyle } from "react-native";
 
-import { colors, radius, spacing, typography } from "@/constants/theme";
+import { colors, radius, shadows, spacing, typography } from "@/constants/theme";
 
 interface ButtonProps {
   label: string;
   onPress: () => void;
-  variant?: "primary" | "secondary" | "outline" | "danger";
+  variant?: "primary" | "secondary" | "accent" | "outline" | "danger";
   disabled?: boolean;
   loading?: boolean;
   icon?: React.ReactNode;
@@ -32,6 +32,7 @@ export function Button({
       disabled={isDisabled}
       style={({ pressed }) => [
         styles.base,
+        variant !== "outline" && !isDisabled && styles.elevated,
         variantStyles[variant],
         isDisabled && styles.disabled,
         pressed && !isDisabled && styles.pressed,
@@ -58,6 +59,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: spacing.lg,
   },
+  elevated: {
+    ...shadows.md,
+  },
   content: {
     flexDirection: "row",
     alignItems: "center",
@@ -71,7 +75,7 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   pressed: {
-    opacity: 0.85,
+    opacity: 0.9,
     transform: [{ scale: 0.99 }],
   },
   disabled: {
@@ -80,12 +84,13 @@ const styles = StyleSheet.create({
 });
 
 const variantStyles = StyleSheet.create({
-  primary: { backgroundColor: colors.primary },
-  secondary: { backgroundColor: colors.secondary },
+  primary: { backgroundColor: colors.primary, shadowColor: colors.primary },
+  secondary: { backgroundColor: colors.secondary, shadowColor: colors.secondary },
+  accent: { backgroundColor: colors.accent, shadowColor: colors.accent },
   outline: {
     backgroundColor: "transparent",
     borderWidth: 2,
     borderColor: colors.primary,
   },
-  danger: { backgroundColor: colors.error },
+  danger: { backgroundColor: colors.error, shadowColor: colors.error },
 });

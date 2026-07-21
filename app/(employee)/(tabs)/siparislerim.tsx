@@ -17,6 +17,7 @@ export default function MyActiveOrdersScreen() {
     <ScreenContainer>
       <View style={styles.header}>
         <Text style={styles.title}>Siparişlerim</Text>
+        <Text style={styles.subtitle}>Devam eden siparişlerinizi takip edin</Text>
       </View>
 
       {loading ? (
@@ -46,14 +47,22 @@ export default function MyActiveOrdersScreen() {
 const styles = StyleSheet.create({
   header: {
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
+    gap: 2,
   },
   title: {
-    ...typography.headlineMd,
+    ...typography.headlineLg,
     color: colors.onSurface,
+  },
+  subtitle: {
+    ...typography.bodyMd,
+    color: colors.onSurfaceVariant,
   },
   listContent: {
     padding: spacing.md,
+    paddingTop: 0,
+    paddingBottom: 140,
     flexGrow: 1,
   },
 });

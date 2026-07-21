@@ -49,18 +49,26 @@ export async function fetchMyOrderHistory(limit = 30): Promise<OrderWithDetails[
 }
 
 export async function createOrder(input: {
-  locationId: string | null;
-  customLocation: string | null;
   note: string | null;
   items: CartItemInput[];
 }): Promise<Order> {
   const { data, error } = await supabase.rpc("create_order", {
-    p_location_id: input.locationId,
-    p_custom_location: input.customLocation,
     p_note: input.note,
     p_items: input.items,
   });
 
+  if (error) throw error;
+  return data as Order;
+}
+
+export async function callWaiter(note: string | null): Promise<Order> {
+  const { data, error } = await supabase.rpc("call_waiter", { p_note: note });
+  if (error) throw error;
+  return data as Order;
+}
+
+export async function requestPickup(note: string | null): Promise<Order> {
+  const { data, error } = await supabase.rpc("request_pickup", { p_note: note });
   if (error) throw error;
   return data as Order;
 }
@@ -71,7 +79,7 @@ export async function cancelOrder(orderId: string): Promise<Order> {
   return data as Order;
 }
 
-// ---- Garson tarafı ----
+// ---- Görevli tarafı ----
 
 export async function fetchWaiterDashboard(): Promise<{
   newOrders: OrderWithDetails[];

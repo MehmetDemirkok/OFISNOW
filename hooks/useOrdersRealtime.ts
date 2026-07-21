@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 
 import { supabase } from "@/lib/supabase";
 
-/** orders tablosundaki INSERT/UPDATE olaylarında callback'i tetikler (garson ekranları için). */
+/** orders tablosundaki INSERT/UPDATE olaylarında callback'i tetikler (görevli ekranları için). */
 export function useOrdersRealtime(onChange: () => void) {
   const callbackRef = useRef(onChange);
   callbackRef.current = onChange;

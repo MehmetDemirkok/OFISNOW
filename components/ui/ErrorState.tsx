@@ -2,7 +2,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { StyleSheet, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
-import { colors, spacing, typography } from "@/constants/theme";
+import { colors, radius, spacing, typography } from "@/constants/theme";
 
 interface ErrorStateProps {
   message: string;
@@ -12,7 +12,9 @@ interface ErrorStateProps {
 export function ErrorState({ message, onRetry }: ErrorStateProps) {
   return (
     <View style={styles.container}>
-      <MaterialIcons name="error-outline" size={48} color={colors.error} />
+      <View style={styles.iconCircle}>
+        <MaterialIcons name="error-outline" size={36} color={colors.error} />
+      </View>
       <Text style={styles.message}>{message}</Text>
       {onRetry ? <Button label="Tekrar Dene" onPress={onRetry} variant="outline" /> : null}
     </View>
@@ -26,6 +28,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: spacing.md,
     padding: spacing.lg,
+  },
+  iconCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: radius.full,
+    backgroundColor: colors.errorContainer,
+    alignItems: "center",
+    justifyContent: "center",
   },
   message: {
     ...typography.bodyLg,

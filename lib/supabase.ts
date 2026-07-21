@@ -39,13 +39,13 @@ export function toFriendlyErrorMessage(error: unknown): string {
     return "Sepetiniz boş. Lütfen en az bir ürün seçin.";
   }
   if (message.includes("LOCATION_REQUIRED")) {
-    return "Lütfen bir teslimat konumu seçin.";
+    return "Lütfen önce hesap köşesinden kat/oda bilginizi girin.";
   }
   if (message.includes("INVALID_QUANTITY")) {
     return "Ürün adedi geçersiz.";
   }
   if (message.includes("ORDER_ALREADY_SEEN")) {
-    return "Bu sipariş az önce başka bir garson tarafından görüldü.";
+    return "Bu sipariş az önce başka bir görevli tarafından görüldü.";
   }
   if (message.includes("ORDER_NOT_COMPLETABLE")) {
     return "Bu sipariş şu anda tamamlanamıyor. Ekranı yenileyin.";
@@ -60,7 +60,7 @@ export function toFriendlyErrorMessage(error: unknown): string {
     return "Bu işlem için yetkiniz yok.";
   }
   if (message.includes("INVALID_INVITE_CODE")) {
-    return "Davet kodu geçersiz. Lütfen şirketinizin admin'inden doğru kodu isteyin.";
+    return "Davet kodu geçersiz. Lütfen şirketinizin çalışanından doğru kodu isteyin.";
   }
   if (message.includes("COMPANY_INFO_REQUIRED")) {
     return "Şirket adı veya davet kodu girmelisiniz.";

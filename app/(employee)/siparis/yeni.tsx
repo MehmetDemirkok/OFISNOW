@@ -13,38 +13,30 @@ import {
 } from "react-native";
 
 import { Button } from "@/components/ui/Button";
-import { ErrorState } from "@/components/ui/ErrorState";
-import { LoadingView } from "@/components/ui/LoadingView";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
-import { LocationPicker, OTHER_VALUE } from "@/components/employee/LocationPicker";
+import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
-import { useAsyncData } from "@/hooks/useAsyncData";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
-import { fetchLocations } from "@/lib/api/catalog";
 import { createOrder } from "@/lib/api/orders";
 import { showAlert } from "@/lib/alert";
 import { safeGoBack } from "@/lib/navigation";
 import { toFriendlyErrorMessage } from "@/lib/supabase";
-import { colors, radius, spacing, typography } from "@/constants/theme";
+import { colors, radius, shadows, spacing, typography } from "@/constants/theme";
 import type { CartItemInput } from "@/types/database";
 
 export default function NewOrderScreen() {
+  const { profile } = useAuth();
   const { lines, increment, decrement, setSpecialRequest, clear } = useCart();
-  const { data: locations, loading, error, refetch } = useAsyncData(fetchLocations, []);
   const isConnected = useNetworkStatus();
 
-  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
-  const [customLocation, setCustomLocation] = useState("");
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const isSubmittingRef = useRef(false);
 
-  const hasLocation =
-    (selectedLocationId && selectedLocationId !== OTHER_VALUE) ||
-    (selectedLocationId === OTHER_VALUE && customLocation.trim().length > 0);
+  const myLocation = profile?.location_description?.trim() || null;
 
-  const canSubmit = lines.length > 0 && hasLocation && isConnected !== false && !submitting;
+  const canSubmit = lines.length > 0 && !!myLocation && isConnected !== false && !submitting;
 
   async function handleSubmit() {
     if (!canSubmit || isSubmittingRef.current) return;
@@ -61,14 +53,12 @@ export default function NewOrderScreen() {
       }));
 
       await createOrder({
-        locationId: selectedLocationId === OTHER_VALUE ? null : selectedLocationId,
-        customLocation: selectedLocationId === OTHER_VALUE ? customLocation.trim() : null,
         note: note.trim() || null,
         items,
       });
 
       clear();
-      showAlert("Siparişiniz alındı", "Siparişiniz garsonlara iletildi.", [
+      showAlert("Siparişiniz alındı", "Siparişiniz görevlilere iletildi.", [
         { text: "Tamam", onPress: () => router.replace("/(employee)") },
       ]);
     } catch (err) {
@@ -82,11 +72,11 @@ export default function NewOrderScreen() {
   return (
     <ScreenContainer>
       <View style={styles.header}>
-        <Pressable onPress={() => safeGoBack("/(employee)")} hitSlop={12}>
-          <MaterialIcons name="arrow-back" size={24} color={colors.onSurface} />
+        <Pressable style={styles.backButton} onPress={() => safeGoBack("/(employee)")} hitSlop={12}>
+          <MaterialIcons name="arrow-back" size={22} color={colors.onSurface} />
         </Pressable>
         <Text style={styles.title}>Siparişi Tamamla</Text>
-        <View style={{ width: 24 }} />
+        <View style={{ width: 40 }} />
       </View>
 
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
@@ -122,18 +112,19 @@ export default function NewOrderScreen() {
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Teslimat Konumu</Text>
-            {loading ? (
-              <LoadingView label="Konumlar yükleniyor..." />
-            ) : error ? (
-              <ErrorState message={error} onRetry={refetch} />
+            {myLocation ? (
+              <View style={styles.locationBox}>
+                <MaterialIcons name="location-on" size={20} color={colors.primary} />
+                <Text style={styles.locationText}>{myLocation}</Text>
+              </View>
             ) : (
-              <LocationPicker
-                locations={locations ?? []}
-                selectedId={selectedLocationId}
-                customText={customLocation}
-                onSelect={setSelectedLocationId}
-                onCustomTextChange={setCustomLocation}
-              />
+              <View style={styles.locationWarning}>
+                <MaterialIcons name="error-outline" size={20} color={colors.error} />
+                <Text style={styles.locationWarningText}>
+                  Konum bilginiz eksik. Sipariş verebilmek için sağ üstteki hesap rozetinden kat/oda
+                  bilginizi girin.
+                </Text>
+              </View>
             )}
           </View>
 
@@ -177,6 +168,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.full,
+    backgroundColor: colors.surfaceContainerLow,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   title: {
     ...typography.headlineSm,
     color: colors.onSurface,
@@ -195,9 +194,10 @@ const styles = StyleSheet.create({
   },
   cartLine: {
     backgroundColor: colors.surfaceContainerLow,
-    borderRadius: radius.md,
-    padding: spacing.sm,
+    borderRadius: radius.lg,
+    padding: spacing.md,
     gap: spacing.xs,
+    ...shadows.sm,
   },
   cartLineHeader: {
     flexDirection: "row",
@@ -240,6 +240,32 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
     ...typography.bodyLg,
     color: colors.onSurface,
+  },
+  locationBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    backgroundColor: colors.primaryFixed,
+    borderRadius: radius.md,
+    padding: spacing.md,
+  },
+  locationText: {
+    ...typography.bodyLg,
+    fontWeight: "600",
+    color: colors.primary,
+  },
+  locationWarning: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.sm,
+    backgroundColor: colors.errorContainer,
+    borderRadius: radius.md,
+    padding: spacing.md,
+  },
+  locationWarningText: {
+    ...typography.bodyMd,
+    color: colors.onErrorContainer,
+    flex: 1,
   },
   errorBox: {
     flexDirection: "row",

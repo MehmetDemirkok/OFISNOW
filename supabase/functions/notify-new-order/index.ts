@@ -1,7 +1,7 @@
 // OfisNow: notify-new-order Edge Function
 //
 // Bir Supabase Database Webhook (orders tablosu, INSERT olayı) bu fonksiyonu
-// tetikler. Fonksiyon, aktif ve push_token'ı olan tüm garsonlara Expo Push
+// tetikler. Fonksiyon, aktif ve push_token'ı olan tüm görevlilere Expo Push
 // Notifications üzerinden anlık, yüksek öncelikli ve özel sesli bir bildirim
 // gönderir. Kurulum adımları için repo kökündeki SETUP.md dosyasına bakın.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
@@ -41,7 +41,7 @@ Deno.serve(async (req: Request) => {
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .select(
-        `id, custom_location, company_id,
+        `id, custom_location, company_id, order_type,
          employee:profiles!orders_employee_id_fkey(full_name),
          location:locations(name),
          order_items(product_name, quantity)`
@@ -55,7 +55,7 @@ Deno.serve(async (req: Request) => {
     }
 
     // Service role RLS'i atlar; bildirim yalnızca siparişin ait olduğu şirketin
-    // garsonlarına gitmeli, başka şirketlerin garsonlarına sızmamalı.
+    // görevlilerine gitmeli, başka şirketlerin görevlilerine sızmamalı.
     const { data: waiters, error: waitersError } = await supabase
       .from("profiles")
       .select("id, push_token")
@@ -65,14 +65,14 @@ Deno.serve(async (req: Request) => {
       .not("push_token", "is", null);
 
     if (waitersError) {
-      console.error("notify-new-order: garsonlar alınamadı", waitersError);
+      console.error("notify-new-order: görevliler alınamadı", waitersError);
       return jsonResponse({ error: "WAITERS_FETCH_FAILED" }, 500);
     }
 
     const activeWaiters = (waiters ?? []) as WaiterProfile[];
 
     if (activeWaiters.length === 0) {
-      console.warn("notify-new-order: push token'ı olan aktif garson bulunamadı");
+      console.warn("notify-new-order: push token'ı olan aktif görevli bulunamadı");
       return jsonResponse({ ok: true, sent: 0 }, 200);
     }
 
@@ -82,18 +82,27 @@ Deno.serve(async (req: Request) => {
     const location = firstOrValue(order.location) as { name?: string } | null;
     const items = (order.order_items ?? []) as OrderItemRow[];
 
+    const isCall = order.order_type === "call";
+    const isPickup = order.order_type === "pickup";
     const itemsSummary = items.map((it) => `${it.quantity}x ${it.product_name}`).join(", ");
     const locationName = location?.name ?? order.custom_location ?? "Belirtilmedi";
     const employeeName = employee?.full_name ?? "Bir çalışan";
 
+    const title = isPickup ? "🧹 Boş Toplama Ricası" : isCall ? "🔔 Görevli Çağrısı" : "🔔 Yeni Sipariş";
+    const body = isPickup
+      ? `${employeeName}, masasındaki boşları alabilir misiniz diye rica ediyor • ${locationName}`
+      : isCall
+        ? `${employeeName} sizi çağırıyor • ${locationName}`
+        : `${employeeName} • ${itemsSummary} • ${locationName}`;
+
     const messages = activeWaiters.map((w) => ({
       to: w.push_token,
-      title: "🔔 Yeni Sipariş",
-      body: `${employeeName} • ${itemsSummary} • ${locationName}`,
+      title,
+      body,
       sound: "new-order.wav",
       channelId: "new-order",
       priority: "high",
-      data: { orderId: order.id, type: "new_order" },
+      data: { orderId: order.id, type: isPickup ? "pickup_request" : isCall ? "waiter_call" : "new_order" },
     }));
 
     const expoResponse = await fetch(EXPO_PUSH_URL, {

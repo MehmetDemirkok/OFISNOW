@@ -6,12 +6,14 @@ import { supabase, toFriendlyErrorMessage } from "@/lib/supabase";
 import type { Profile } from "@/types/database";
 
 /**
- * Kayıt olurken ya yeni bir şirket kurulur (kayıt olan kişi admin olur),
- * ya da mevcut bir şirkete admin'in verdiği davet koduyla katılınır.
+ * Kayıt olurken ya yeni bir şirket kurulur (kayıt olan kişi çalışan olur ve
+ * şirketi yönetir), ya da mevcut bir şirkete çalışanın verdiği davet koduyla
+ * katılınır.
  */
 export type SignUpCompanyInput =
   | { mode: "create"; companyName: string }
-  | { mode: "join"; inviteCode: string; role: "employee" | "waiter" };
+  | { mode: "join"; inviteCode: string; role: "employee"; locationDescription: string }
+  | { mode: "join"; inviteCode: string; role: "waiter" };
 
 interface AuthContextValue {
   session: Session | null;
@@ -83,7 +85,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const metadata =
         company.mode === "create"
           ? { full_name: fullName, company_name: company.companyName }
-          : { full_name: fullName, invite_code: company.inviteCode, role: company.role };
+          : company.role === "employee"
+            ? {
+                full_name: fullName,
+                invite_code: company.inviteCode,
+                role: company.role,
+                location_description: company.locationDescription,
+              }
+            : { full_name: fullName, invite_code: company.inviteCode, role: company.role };
 
       const { data, error } = await supabase.auth.signUp({
         email,

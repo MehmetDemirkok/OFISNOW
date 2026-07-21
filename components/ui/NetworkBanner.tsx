@@ -2,7 +2,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { StyleSheet, Text, View } from "react-native";
 
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
-import { colors, spacing, typography } from "@/constants/theme";
+import { colors, radius, spacing, typography } from "@/constants/theme";
 
 export function NetworkBanner() {
   const isConnected = useNetworkStatus();
@@ -26,6 +26,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.error,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
+    borderRadius: radius.sm,
+    marginHorizontal: spacing.md,
+    marginTop: spacing.sm,
   },
   text: {
     ...typography.labelLg,

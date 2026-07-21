@@ -49,7 +49,13 @@
           "mode": "production"
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Profil fotoğrafı seçebilmek için fotoğraflarınıza erişim izni gerekiyor."
+        }
+      ]
     ],
     "extra": {
       "router": {}

@@ -1,13 +1,15 @@
 // OfisNow: Supabase şemasına karşılık gelen alan (domain) tipleri.
 // supabase/migrations/20260720000001_init_schema.sql ile birebir uyumludur.
 
-export type UserRole = "employee" | "waiter" | "admin";
+export type UserRole = "employee" | "waiter";
 export type OrderStatus = "new" | "seen" | "completed" | "cancelled";
+export type OrderType = "product" | "call" | "pickup";
 
 export interface Company {
   id: string;
   name: string;
   invite_code: string;
+  invite_code_generated_at: string;
   created_at: string;
 }
 
@@ -20,6 +22,10 @@ export interface Profile {
   phone: string | null;
   push_token: string | null;
   is_active: boolean;
+  location_description: string | null;
+  avatar_url: string | null;
+  birth_date: string | null;
+  job_title: string | null;
   created_at: string;
 }
 
@@ -42,6 +48,7 @@ export interface Product {
   created_at: string;
 }
 
+/** Yalnızca geçmiş siparişlerin eski paylaşılan konum kaydını göstermek için tutulur. */
 export interface Location {
   id: string;
   company_id: string;
@@ -49,18 +56,6 @@ export interface Location {
   is_active: boolean;
   sort_order: number;
   created_at: string;
-}
-
-export interface LocationContact {
-  id: string;
-  location_id: string;
-  full_name: string;
-  sort_order: number;
-  created_at: string;
-}
-
-export interface LocationWithContacts extends Location {
-  contacts: LocationContact[];
 }
 
 export interface OrderItem {
@@ -79,6 +74,7 @@ export interface Order {
   order_number: number;
   employee_id: string;
   status: OrderStatus;
+  order_type: OrderType;
   location_id: string | null;
   custom_location: string | null;
   note: string | null;
@@ -89,7 +85,7 @@ export interface Order {
   updated_at: string;
 }
 
-/** Garson ekranı ve sipariş detayı için siparişin ilişkili verilerle birlikte hali. */
+/** Görevli ekranı ve sipariş detayı için siparişin ilişkili verilerle birlikte hali. */
 export interface OrderWithDetails extends Order {
   order_items: OrderItem[];
   employee: Pick<Profile, "id" | "full_name"> | null;

@@ -13,6 +13,5 @@ export default function Index() {
   if (!profile) return <LoadingView label="Profil yükleniyor..." />;
 
   if (profile.role === "waiter") return <Redirect href="/(waiter)" />;
-  if (profile.role === "admin") return <Redirect href="/(admin)" />;
   return <Redirect href="/(employee)" />;
 }

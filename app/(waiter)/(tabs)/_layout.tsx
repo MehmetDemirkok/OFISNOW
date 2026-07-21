@@ -1,19 +1,11 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 
-import { colors } from "@/constants/theme";
+import { tabBarScreenOptions } from "@/constants/theme";
 
 export default function WaiterTabsLayout() {
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.onSurfaceVariant,
-        tabBarStyle: { height: 64, paddingBottom: 8, paddingTop: 8 },
-        tabBarLabelStyle: { fontSize: 12, fontWeight: "600" },
-      }}
-    >
+    <Tabs screenOptions={tabBarScreenOptions}>
       <Tabs.Screen
         name="index"
         options={{

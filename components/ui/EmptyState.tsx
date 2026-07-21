@@ -2,7 +2,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import type { ComponentProps } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-import { colors, spacing, typography } from "@/constants/theme";
+import { colors, radius, spacing, typography } from "@/constants/theme";
 
 interface EmptyStateProps {
   icon?: ComponentProps<typeof MaterialIcons>["name"];
@@ -13,7 +13,9 @@ interface EmptyStateProps {
 export function EmptyState({ icon = "inbox", title, description }: EmptyStateProps) {
   return (
     <View style={styles.container}>
-      <MaterialIcons name={icon} size={40} color={colors.outline} />
+      <View style={styles.iconCircle}>
+        <MaterialIcons name={icon} size={32} color={colors.primary} />
+      </View>
       <Text style={styles.title}>{title}</Text>
       {description ? <Text style={styles.description}>{description}</Text> : null}
     </View>
@@ -26,6 +28,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: spacing.sm,
     padding: spacing.xl,
+  },
+  iconCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: radius.full,
+    backgroundColor: colors.primaryFixed,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.xs,
   },
   title: {
     ...typography.headlineSm,

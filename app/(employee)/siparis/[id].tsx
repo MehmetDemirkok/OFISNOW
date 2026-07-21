@@ -12,7 +12,7 @@ import { cancelOrder, fetchOrderById } from "@/lib/api/orders";
 import { showAlert } from "@/lib/alert";
 import { safeGoBack } from "@/lib/navigation";
 import { toFriendlyErrorMessage } from "@/lib/supabase";
-import { colors, employeeStatusLabels, radius, spacing, typography } from "@/constants/theme";
+import { colors, employeeStatusLabels, radius, shadows, spacing, typography } from "@/constants/theme";
 
 export default function EmployeeOrderDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -44,11 +44,11 @@ export default function EmployeeOrderDetailScreen() {
   return (
     <ScreenContainer>
       <View style={styles.header}>
-        <Pressable onPress={() => safeGoBack("/(employee)")} hitSlop={12}>
-          <MaterialIcons name="arrow-back" size={24} color={colors.onSurface} />
+        <Pressable style={styles.backButton} onPress={() => safeGoBack("/(employee)")} hitSlop={12}>
+          <MaterialIcons name="arrow-back" size={22} color={colors.onSurface} />
         </Pressable>
         <Text style={styles.title}>Sipariş Detayı</Text>
-        <View style={{ width: 24 }} />
+        <View style={{ width: 40 }} />
       </View>
 
       {loading ? (
@@ -66,19 +66,39 @@ export default function EmployeeOrderDetailScreen() {
             <Text style={styles.statusText}>{employeeStatusLabels[order.status]}</Text>
           </View>
 
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Ürünler</Text>
-            {order.order_items.map((item) => (
-              <View key={item.id} style={styles.itemRow}>
-                <Text style={styles.itemName}>
-                  {item.quantity}x {item.product_name}
+          {order.order_type === "pickup" ? (
+            <View style={styles.card}>
+              <View style={styles.metaRow}>
+                <MaterialIcons name="cleaning-services" size={18} color={colors.secondary} />
+                <Text style={[styles.metaText, { color: colors.secondary, fontWeight: "700" }]}>
+                  Boş toplama ricası gönderildi
                 </Text>
-                {item.special_request ? (
-                  <Text style={styles.itemNote}>Not: {item.special_request}</Text>
-                ) : null}
               </View>
-            ))}
-          </View>
+            </View>
+          ) : order.order_type === "call" ? (
+            <View style={styles.card}>
+              <View style={styles.metaRow}>
+                <MaterialIcons name="notifications-active" size={18} color={colors.primary} />
+                <Text style={[styles.metaText, { color: colors.primary, fontWeight: "700" }]}>
+                  Görevli çağrısı gönderildi
+                </Text>
+              </View>
+            </View>
+          ) : (
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Ürünler</Text>
+              {order.order_items.map((item) => (
+                <View key={item.id} style={styles.itemRow}>
+                  <Text style={styles.itemName}>
+                    {item.quantity}x {item.product_name}
+                  </Text>
+                  {item.special_request ? (
+                    <Text style={styles.itemNote}>Not: {item.special_request}</Text>
+                  ) : null}
+                </View>
+              ))}
+            </View>
+          )}
 
           <View style={styles.card}>
             <View style={styles.metaRow}>
@@ -115,6 +135,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.full,
+    backgroundColor: colors.surfaceContainerLow,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   title: {
     ...typography.headlineSm,
     color: colors.onSurface,
@@ -129,7 +157,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     backgroundColor: colors.primaryFixed,
     padding: spacing.md,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
   },
   statusText: {
     ...typography.headlineSm,
@@ -137,11 +165,10 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: colors.surfaceContainerLowest,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    borderRadius: radius.lg,
     padding: spacing.md,
     gap: spacing.sm,
+    ...shadows.sm,
   },
   cardTitle: {
     ...typography.labelLg,

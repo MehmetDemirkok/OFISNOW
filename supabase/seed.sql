@@ -1,9 +1,10 @@
 -- OfisNow: örnek başlangıç verisi (kategoriler, konumlar, ürünler)
 -- Not: profiles satırları auth.users üzerinden (Supabase Auth) oluşturulan
 -- kullanıcılar için handle_new_user trigger'ı ile otomatik oluşur.
--- Çalışan/garson/admin kullanıcılarını Supabase Dashboard > Authentication
--- veya Admin API üzerinden, user_metadata içinde { "full_name": "...", "role": "waiter" }
--- ile oluşturun.
+-- Çalışan/görevli kullanıcılarını Supabase Dashboard > Authentication
+-- veya Admin API üzerinden, user_metadata içinde { "full_name": "...", "role": "employee" }
+-- (katalog/konum/davet kodu yönetimi) veya { "role": "waiter" } (yalnızca
+-- sipariş karşılama) ile oluşturun.
 
 insert into public.categories (name, sort_order) values
   ('Sıcak İçecekler', 1),

@@ -11,7 +11,7 @@ import { useAsyncData } from "@/hooks/useAsyncData";
 import { fetchProductsByCategory } from "@/lib/api/catalog";
 import { useCart } from "@/context/CartContext";
 import { safeGoBack } from "@/lib/navigation";
-import { colors, radius, spacing, typography } from "@/constants/theme";
+import { colors, radius, shadows, spacing, typography } from "@/constants/theme";
 
 export default function CategoryProductsScreen() {
   const { id, name } = useLocalSearchParams<{ id: string; name?: string }>();
@@ -24,13 +24,13 @@ export default function CategoryProductsScreen() {
   return (
     <ScreenContainer>
       <View style={styles.header}>
-        <Pressable onPress={() => safeGoBack("/(employee)")} hitSlop={12}>
-          <MaterialIcons name="arrow-back" size={24} color={colors.onSurface} />
+        <Pressable style={styles.backButton} onPress={() => safeGoBack("/(employee)")} hitSlop={12}>
+          <MaterialIcons name="arrow-back" size={22} color={colors.onSurface} />
         </Pressable>
         <Text style={styles.title} numberOfLines={1}>
           {name ?? "Ürünler"}
         </Text>
-        <View style={{ width: 24 }} />
+        <View style={{ width: 40 }} />
       </View>
 
       {loading ? (
@@ -82,6 +82,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.full,
+    backgroundColor: colors.surfaceContainerLow,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   title: {
     ...typography.headlineSm,
     color: colors.onSurface,
@@ -100,13 +108,15 @@ const styles = StyleSheet.create({
     bottom: spacing.md,
   },
   fab: {
-    height: 56,
-    borderRadius: radius.md,
+    height: 60,
+    borderRadius: radius.lg,
     backgroundColor: colors.primaryContainer,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: spacing.lg,
+    ...shadows.lg,
+    shadowColor: colors.primaryDark,
   },
   fabPressed: {
     opacity: 0.9,

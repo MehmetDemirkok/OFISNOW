@@ -31,9 +31,9 @@ function RootNavigator() {
         <Stack.Screen name="index" />
         <Stack.Screen name="login" />
         <Stack.Screen name="register" />
+        <Stack.Screen name="profile" />
         <Stack.Screen name="(employee)" />
         <Stack.Screen name="(waiter)" />
-        <Stack.Screen name="(admin)" />
       </Stack>
       <AccountCorner />
       <AppAlert />
