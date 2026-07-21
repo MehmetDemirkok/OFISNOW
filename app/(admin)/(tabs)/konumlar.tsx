@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { AdminScreenHeader } from "@/components/admin/AdminScreenHeader";
 import { LocationCard } from "@/components/admin/LocationCard";
@@ -10,7 +10,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { LoadingView } from "@/components/ui/LoadingView";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useAsyncData } from "@/hooks/useAsyncData";
-import { fetchAllLocations, updateLocation } from "@/lib/api/catalog";
+import { createLocation, deleteLocation, fetchAllLocations, updateLocation } from "@/lib/api/catalog";
 import { showAlert } from "@/lib/alert";
 import { toFriendlyErrorMessage } from "@/lib/supabase";
 import { colors, radius, spacing, typography } from "@/constants/theme";
@@ -18,6 +18,9 @@ import { colors, radius, spacing, typography } from "@/constants/theme";
 export default function AdminLocationsScreen() {
   const { data: locations, loading, error, refetch } = useAsyncData(fetchAllLocations, []);
   const [query, setQuery] = useState("");
+  const [addModalVisible, setAddModalVisible] = useState(false);
+  const [newLocationName, setNewLocationName] = useState("");
+  const [savingNewLocation, setSavingNewLocation] = useState(false);
 
   const filteredLocations = useMemo(() => {
     if (!locations) return [];
@@ -38,9 +41,49 @@ export default function AdminLocationsScreen() {
     }
   }
 
+  function handleDelete(id: string, name: string) {
+    showAlert("Konumu Sil", `"${name}" konumunu silmek istediğinize emin misiniz?`, [
+      { text: "Vazgeç", style: "cancel" },
+      {
+        text: "Sil",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deleteLocation(id);
+            refetch();
+          } catch (err) {
+            showAlert("Hata", toFriendlyErrorMessage(err));
+          }
+        },
+      },
+    ]);
+  }
+
+  function openAddModal() {
+    setNewLocationName("");
+    setAddModalVisible(true);
+  }
+
+  async function handleAddLocation() {
+    const trimmed = newLocationName.trim();
+    if (!trimmed || savingNewLocation) return;
+    setSavingNewLocation(true);
+    try {
+      const nextSortOrder = (locations?.length ?? 0) + 1;
+      await createLocation({ name: trimmed, sort_order: nextSortOrder });
+      setAddModalVisible(false);
+      setNewLocationName("");
+      refetch();
+    } catch (err) {
+      showAlert("Hata", toFriendlyErrorMessage(err));
+    } finally {
+      setSavingNewLocation(false);
+    }
+  }
+
   return (
     <ScreenContainer>
-      <AdminScreenHeader title="Konumlar" onAdd={() => router.push("/(admin)/konumlar/form")} />
+      <AdminScreenHeader title="Konumlar" onAdd={openAddModal} />
 
       {loading ? (
         <LoadingView />
@@ -89,11 +132,55 @@ export default function AdminLocationsScreen() {
                 location={item}
                 onToggleActive={(value) => handleToggle(item.id, value)}
                 onEdit={() => router.push(`/(admin)/konumlar/form?id=${item.id}`)}
+                onDelete={() => handleDelete(item.id, item.name)}
               />
             )}
           />
         </>
       )}
+
+      <Modal
+        visible={addModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setAddModalVisible(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Yeni Konum</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={newLocationName}
+              onChangeText={setNewLocationName}
+              placeholder="Örn. Toplantı Odası 3"
+              placeholderTextColor={colors.outline}
+              autoFocus
+              onSubmitEditing={handleAddLocation}
+              returnKeyType="done"
+            />
+            <View style={styles.modalButtonRow}>
+              <Pressable
+                style={[styles.modalButton, styles.modalButtonCancel]}
+                onPress={() => setAddModalVisible(false)}
+                disabled={savingNewLocation}
+              >
+                <Text style={styles.modalButtonTextCancel}>Vazgeç</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.modalButton, styles.modalButtonPrimary, !newLocationName.trim() && styles.modalButtonDisabled]}
+                onPress={handleAddLocation}
+                disabled={!newLocationName.trim() || savingNewLocation}
+              >
+                {savingNewLocation ? (
+                  <ActivityIndicator color="#ffffff" size="small" />
+                ) : (
+                  <Text style={styles.modalButtonTextPrimary}>Ekle</Text>
+                )}
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScreenContainer>
   );
 }
@@ -125,5 +212,70 @@ const styles = StyleSheet.create({
   listContent: {
     padding: spacing.md,
     flexGrow: 1,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: spacing.lg,
+  },
+  modalCard: {
+    width: "100%",
+    maxWidth: 340,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    gap: spacing.md,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 12,
+  },
+  modalTitle: {
+    ...typography.headlineSm,
+    color: colors.onSurface,
+    textAlign: "center",
+  },
+  modalInput: {
+    height: 52,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+    paddingHorizontal: spacing.md,
+    backgroundColor: colors.surfaceContainerLowest,
+    ...typography.bodyLg,
+    color: colors.onSurface,
+  },
+  modalButtonRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  modalButton: {
+    flex: 1,
+    height: 46,
+    borderRadius: radius.md,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalButtonCancel: {
+    backgroundColor: colors.surfaceContainerHigh,
+  },
+  modalButtonPrimary: {
+    backgroundColor: colors.primary,
+  },
+  modalButtonDisabled: {
+    opacity: 0.5,
+  },
+  modalButtonTextCancel: {
+    ...typography.bodyMd,
+    fontWeight: "700",
+    color: colors.onSurfaceVariant,
+  },
+  modalButtonTextPrimary: {
+    ...typography.bodyMd,
+    fontWeight: "700",
+    color: "#ffffff",
   },
 });

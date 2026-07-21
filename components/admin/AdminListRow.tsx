@@ -9,9 +9,10 @@ interface AdminListRowProps {
   isActive: boolean;
   onToggleActive: (value: boolean) => void;
   onEdit: () => void;
+  onDelete?: () => void;
 }
 
-export function AdminListRow({ title, subtitle, isActive, onToggleActive, onEdit }: AdminListRowProps) {
+export function AdminListRow({ title, subtitle, isActive, onToggleActive, onEdit, onDelete }: AdminListRowProps) {
   return (
     <View style={[styles.row, !isActive && styles.rowInactive]}>
       <View style={styles.info}>
@@ -27,6 +28,11 @@ export function AdminListRow({ title, subtitle, isActive, onToggleActive, onEdit
         <Pressable onPress={onEdit} hitSlop={10}>
           <MaterialIcons name="edit" size={22} color={colors.onSurfaceVariant} />
         </Pressable>
+        {onDelete ? (
+          <Pressable onPress={onDelete} hitSlop={10}>
+            <MaterialIcons name="delete-outline" size={22} color={colors.error} />
+          </Pressable>
+        ) : null}
       </View>
     </View>
   );

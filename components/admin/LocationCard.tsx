@@ -10,9 +10,10 @@ interface LocationCardProps {
   location: LocationWithContacts;
   onToggleActive: (value: boolean) => void;
   onEdit: () => void;
+  onDelete: () => void;
 }
 
-export function LocationCard({ location, onToggleActive, onEdit }: LocationCardProps) {
+export function LocationCard({ location, onToggleActive, onEdit, onDelete }: LocationCardProps) {
   const contacts = location.contacts ?? [];
   const visibleContacts = contacts.slice(0, MAX_VISIBLE_CONTACTS);
   const overflowCount = contacts.length - visibleContacts.length;
@@ -42,6 +43,9 @@ export function LocationCard({ location, onToggleActive, onEdit }: LocationCardP
           />
           <Pressable onPress={onEdit} hitSlop={10} style={styles.editButton}>
             <MaterialIcons name="edit" size={20} color={colors.onSurfaceVariant} />
+          </Pressable>
+          <Pressable onPress={onDelete} hitSlop={10} style={styles.editButton}>
+            <MaterialIcons name="delete-outline" size={20} color={colors.error} />
           </Pressable>
         </View>
       </View>

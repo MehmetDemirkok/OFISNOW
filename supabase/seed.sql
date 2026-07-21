@@ -8,9 +8,8 @@
 insert into public.categories (name, sort_order) values
   ('Sıcak İçecekler', 1),
   ('Soğuk İçecekler', 2),
-  ('Yemekler', 3),
-  ('Atıştırmalıklar', 4),
-  ('Diğer', 5);
+  ('Yiyecekler', 3),
+  ('Diğer', 4);
 
 insert into public.locations (name, sort_order) values
   ('Ofis', 1),
@@ -53,17 +52,5 @@ select id, 'Meyve Suyu', 'Taze sıkılmış meyve suyu.'
 from public.categories where name = 'Soğuk İçecekler';
 
 insert into public.products (category_id, name, description)
-select id, 'Tost', 'Kaşarlı ve sucuklu tost.'
-from public.categories where name = 'Yemekler';
-
-insert into public.products (category_id, name, description)
-select id, 'Sandviç', 'Tavuklu ve sebzeli sandviç.'
-from public.categories where name = 'Yemekler';
-
-insert into public.products (category_id, name, description)
-select id, 'Çikolata', 'Sütlü çikolata bar.'
-from public.categories where name = 'Atıştırmalıklar';
-
-insert into public.products (category_id, name, description)
-select id, 'Kraker', 'Tuzlu kraker paketi.'
-from public.categories where name = 'Atıştırmalıklar';
+select id, 'Kuruyemiş', 'Karışık kuruyemiş.'
+from public.categories where name = 'Yiyecekler';

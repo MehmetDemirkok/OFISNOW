@@ -23,6 +23,7 @@ import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { fetchLocations } from "@/lib/api/catalog";
 import { createOrder } from "@/lib/api/orders";
 import { showAlert } from "@/lib/alert";
+import { safeGoBack } from "@/lib/navigation";
 import { toFriendlyErrorMessage } from "@/lib/supabase";
 import { colors, radius, spacing, typography } from "@/constants/theme";
 import type { CartItemInput } from "@/types/database";
@@ -81,7 +82,7 @@ export default function NewOrderScreen() {
   return (
     <ScreenContainer>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
+        <Pressable onPress={() => safeGoBack("/(employee)")} hitSlop={12}>
           <MaterialIcons name="arrow-back" size={24} color={colors.onSurface} />
         </Pressable>
         <Text style={styles.title}>Siparişi Tamamla</Text>

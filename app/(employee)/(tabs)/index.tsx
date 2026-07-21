@@ -1,5 +1,4 @@
 import { useCallback } from "react";
-import { MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 
@@ -14,7 +13,7 @@ import { useAsyncData } from "@/hooks/useAsyncData";
 import { colors, spacing, typography } from "@/constants/theme";
 
 export default function EmployeeHomeScreen() {
-  const { profile, signOut } = useAuth();
+  const { profile } = useAuth();
 
   const categories = useAsyncData(fetchCategories, []);
   const activeOrders = useAsyncData(fetchMyActiveOrders, []);
@@ -36,17 +35,8 @@ export default function EmployeeHomeScreen() {
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refreshAll} />}
       >
         <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Merhaba {profile?.full_name?.split(" ")[0] ?? ""} 👋</Text>
-            <Text style={styles.subGreeting}>Ne sipariş etmek istersiniz?</Text>
-          </View>
-          <MaterialIcons
-            name="logout"
-            size={24}
-            color={colors.onSurfaceVariant}
-            onPress={signOut}
-            suppressHighlighting
-          />
+          <Text style={styles.greeting}>Merhaba {profile?.full_name?.split(" ")[0] ?? ""} 👋</Text>
+          <Text style={styles.subGreeting}>Ne sipariş etmek istersiniz?</Text>
         </View>
 
         <View style={styles.categoryGrid}>
@@ -104,9 +94,7 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
+    paddingRight: 56,
   },
   greeting: {
     ...typography.headlineMobile,

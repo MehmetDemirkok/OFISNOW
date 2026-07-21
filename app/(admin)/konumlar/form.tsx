@@ -16,6 +16,7 @@ import {
   updateLocation,
 } from "@/lib/api/catalog";
 import { showAlert } from "@/lib/alert";
+import { safeGoBack } from "@/lib/navigation";
 import { toFriendlyErrorMessage } from "@/lib/supabase";
 import { colors, radius, spacing, typography } from "@/constants/theme";
 
@@ -61,7 +62,7 @@ export default function LocationFormScreen() {
       const parsedSort = Number(sortOrder) || 0;
       if (isEdit) {
         await updateLocation(id, { name: name.trim(), sort_order: parsedSort, is_active: isActive });
-        router.back();
+        safeGoBack("/(admin)/(tabs)/konumlar");
       } else {
         const created = await createLocation({ name: name.trim(), sort_order: parsedSort });
         // Kişi eklenebilmesi için oluşturulan konumun düzenleme moduna geç.
@@ -111,7 +112,7 @@ export default function LocationFormScreen() {
   return (
     <ScreenContainer>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
+        <Pressable onPress={() => safeGoBack("/(admin)/(tabs)/konumlar")} hitSlop={12}>
           <MaterialIcons name="close" size={24} color={colors.onSurface} />
         </Pressable>
         <Text style={styles.title}>{isEdit ? "Konumu Düzenle" : "Yeni Konum"}</Text>

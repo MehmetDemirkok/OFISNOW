@@ -10,6 +10,7 @@ import { ProductCard } from "@/components/employee/ProductCard";
 import { useAsyncData } from "@/hooks/useAsyncData";
 import { fetchProductsByCategory } from "@/lib/api/catalog";
 import { useCart } from "@/context/CartContext";
+import { safeGoBack } from "@/lib/navigation";
 import { colors, radius, spacing, typography } from "@/constants/theme";
 
 export default function CategoryProductsScreen() {
@@ -23,7 +24,7 @@ export default function CategoryProductsScreen() {
   return (
     <ScreenContainer>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
+        <Pressable onPress={() => safeGoBack("/(employee)")} hitSlop={12}>
           <MaterialIcons name="arrow-back" size={24} color={colors.onSurface} />
         </Pressable>
         <Text style={styles.title} numberOfLines={1}>

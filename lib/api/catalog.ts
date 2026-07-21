@@ -58,6 +58,11 @@ export async function updateCategory(id: string, patch: Partial<Category>) {
   if (error) throw error;
 }
 
+export async function deleteCategory(id: string): Promise<void> {
+  const { error } = await supabase.from("categories").delete().eq("id", id);
+  if (error) throw error;
+}
+
 // ---- Admin: ürün yönetimi ----
 export async function fetchAllProducts(): Promise<Product[]> {
   const { data, error } = await supabase.from("products").select("*").order("name");
@@ -112,6 +117,11 @@ export async function createLocation(input: { name: string; sort_order: number }
 
 export async function updateLocation(id: string, patch: Partial<Location>) {
   const { error } = await supabase.from("locations").update(patch).eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteLocation(id: string): Promise<void> {
+  const { error } = await supabase.from("locations").delete().eq("id", id);
   if (error) throw error;
 }
 

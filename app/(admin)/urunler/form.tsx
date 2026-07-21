@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { MaterialIcons } from "@expo/vector-icons";
-import { router, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import {
   Pressable,
   ScrollView,
@@ -22,6 +22,7 @@ import {
   updateProduct,
 } from "@/lib/api/catalog";
 import { showAlert } from "@/lib/alert";
+import { safeGoBack } from "@/lib/navigation";
 import { toFriendlyErrorMessage } from "@/lib/supabase";
 import { colors, radius, spacing, typography } from "@/constants/theme";
 
@@ -76,7 +77,7 @@ export default function ProductFormScreen() {
           category_id: categoryId,
         });
       }
-      router.back();
+      safeGoBack("/(admin)/(tabs)/urunler");
     } catch (err) {
       showAlert("Hata", toFriendlyErrorMessage(err));
     } finally {
@@ -95,7 +96,7 @@ export default function ProductFormScreen() {
   return (
     <ScreenContainer>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
+        <Pressable onPress={() => safeGoBack("/(admin)/(tabs)/urunler")} hitSlop={12}>
           <MaterialIcons name="close" size={24} color={colors.onSurface} />
         </Pressable>
         <Text style={styles.title}>{isEdit ? "Ürünü Düzenle" : "Yeni Ürün"}</Text>
