@@ -72,5 +72,10 @@ export function toFriendlyErrorMessage(error: unknown): string {
     return "Bu e-posta adresiyle zaten bir hesap var.";
   }
 
+  const code = error && typeof error === "object" && "code" in error ? String((error as { code?: unknown }).code) : "";
+  if (code === "23503" || message.includes("foreign key constraint") || message.includes("violates foreign key")) {
+    return "Bu kayıt başka kayıtlarda kullanıldığı için silinemiyor. Önce bağlı kayıtları kaldırın veya taşıyın.";
+  }
+
   return "Bir şeyler ters gitti. Lütfen tekrar deneyin.";
 }
