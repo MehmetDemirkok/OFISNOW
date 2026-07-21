@@ -12,8 +12,10 @@
       "bundleIdentifier": "com.ofisnow.app",
       "infoPlist": {
         "UIBackgroundModes": [
+          "remote-notification",
           "remote-notification"
-        ]
+        ],
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -26,8 +28,9 @@
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
-        "POST_NOTIFICATIONS",
-        "VIBRATE"
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.VIBRATE",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
@@ -58,7 +61,11 @@
       ]
     ],
     "extra": {
-      "router": {}
-    }
+      "router": {},
+      "eas": {
+        "projectId": "258bffdd-bf51-4bfa-b722-bcd193142ae3"
+      }
+    },
+    "owner": "mehmetdemirkok"
   }
 }
