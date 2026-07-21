@@ -24,7 +24,7 @@ export async function fetchProductsByCategory(categoryId: string): Promise<Produ
   return data as Product[];
 }
 
-// ---- Çalışan: kategori yönetimi ----
+// ---- Görevli: kategori yönetimi ----
 export async function fetchAllCategories(): Promise<Category[]> {
   const { data, error } = await supabase.from("categories").select("*").order("sort_order");
   if (error) throw error;
@@ -52,7 +52,7 @@ export async function deleteCategory(id: string): Promise<void> {
   if (error) throw error;
 }
 
-// ---- Çalışan: ürün yönetimi ----
+// ---- Görevli: ürün yönetimi ----
 export async function fetchAllProducts(): Promise<Product[]> {
   const { data, error } = await supabase.from("products").select("*").order("name");
   if (error) throw error;

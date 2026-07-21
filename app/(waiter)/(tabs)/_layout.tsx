@@ -14,6 +14,15 @@ export default function WaiterTabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="katalog"
+        options={{
+          title: "Katalog",
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="restaurant-menu" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="gecmis"
         options={{
           title: "Geçmiş",
