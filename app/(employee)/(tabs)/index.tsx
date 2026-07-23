@@ -192,7 +192,7 @@ export default function EmployeeHomeScreen() {
 
 const styles = StyleSheet.create({
   screen: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.background,
   },
   content: {
     paddingBottom: 140,

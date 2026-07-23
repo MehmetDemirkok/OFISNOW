@@ -134,7 +134,7 @@ export default function WaiterDashboardScreen() {
 
 const styles = StyleSheet.create({
   screen: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.background,
   },
   content: {
     padding: spacing.md,
