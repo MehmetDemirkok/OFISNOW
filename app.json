@@ -65,6 +65,12 @@
         "projectId": "258bffdd-bf51-4bfa-b722-bcd193142ae3"
       }
     },
-    "owner": "mehmetdemirkok"
+    "owner": "mehmetdemirkok",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/258bffdd-bf51-4bfa-b722-bcd193142ae3"
+    }
   }
 }

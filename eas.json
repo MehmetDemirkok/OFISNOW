@@ -8,7 +8,8 @@
       "env": {
         "EXPO_PUBLIC_SUPABASE_URL": "https://fsksmdubigkzlsdmrebt.supabase.co",
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZza3NtZHViaWdremxzZG1yZWJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1NjgxMDQsImV4cCI6MjEwMDE0NDEwNH0.Zdcie_K_kOEufZBIHiqSrlXqSifF2gzDp45RmMuLiTs"
-      }
+      },
+      "channel": "base"
     },
     "development": {
       "extends": "base",
@@ -16,7 +17,8 @@
       "distribution": "internal",
       "ios": {
         "resourceClass": "m-medium"
-      }
+      },
+      "channel": "development"
     },
     "preview": {
       "extends": "base",
@@ -26,14 +28,16 @@
       },
       "android": {
         "buildType": "apk"
-      }
+      },
+      "channel": "preview"
     },
     "production": {
       "extends": "base",
       "autoIncrement": true,
       "ios": {
         "resourceClass": "m-medium"
-      }
+      },
+      "channel": "production"
     }
   },
   "submit": {
