@@ -112,10 +112,15 @@ export async function fetchSeenOrders(): Promise<OrderWithDetails[]> {
 }
 
 export async function fetchCompletedOrders(limit = 30): Promise<OrderWithDetails[]> {
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
   const { data, error } = await supabase
     .from("orders")
     .select(ORDER_DETAIL_SELECT)
     .in("status", ["completed", "cancelled"])
+    .gte("completed_at", startOfMonth.toISOString())
     .order("completed_at", { ascending: false })
     .limit(limit);
 
