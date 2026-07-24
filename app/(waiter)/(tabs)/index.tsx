@@ -16,7 +16,7 @@ import { useOrdersRealtime } from "@/hooks/useOrdersRealtime";
 import { claimOrder, completeOrder, fetchWaiterDashboard } from "@/lib/api/orders";
 import { showAlert } from "@/lib/alert";
 import { toFriendlyErrorMessage } from "@/lib/supabase";
-import { initWebOrderSoundUnlock, playNewOrderWebSound } from "@/lib/webOrderSound";
+import { initWebOrderSoundUnlock, playNewOrderWebSound, playOrderCancelledWebSound } from "@/lib/webOrderSound";
 import { colors, spacing, typography } from "@/constants/theme";
 
 export default function WaiterDashboardScreen() {
@@ -29,9 +29,11 @@ export default function WaiterDashboardScreen() {
 
   useOrdersRealtime(
     useCallback(
-      (eventType) => {
+      ({ eventType, newStatus, oldStatus }) => {
         if (eventType === "INSERT") {
           playNewOrderWebSound();
+        } else if (eventType === "UPDATE" && newStatus === "cancelled" && oldStatus !== "cancelled") {
+          playOrderCancelledWebSound();
         }
         refetch();
       },
