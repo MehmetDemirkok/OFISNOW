@@ -22,6 +22,7 @@ import { showAlert } from "@/lib/alert";
 import { toFriendlyErrorMessage } from "@/lib/supabase";
 import { colors, radius, spacing, typography, webShell } from "@/constants/theme";
 import type { UserRole } from "@/types/database";
+import { PwaInstallRow } from "@/components/ui/PwaInstallRow";
 
 const roleLabels: Record<UserRole, string> = {
   employee: "Çalışan",
@@ -189,6 +190,8 @@ export function AccountCorner() {
                   <MaterialIcons name="edit" size={16} color={colors.primary} />
                   <Text style={styles.editProfileText}>Profili Düzenle</Text>
                 </Pressable>
+
+                <PwaInstallRow />
 
                 {isEmployee && inviteCode ? (
                   <Pressable style={styles.inviteRow} onPress={handleCopyInviteCode} hitSlop={4}>

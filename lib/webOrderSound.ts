@@ -14,6 +14,7 @@ function getAudio(): HTMLAudioElement | null {
   if (!audioEl) {
     audioEl = new window.Audio(SOUND_URL);
     audioEl.preload = "auto";
+    audioEl.volume = 1;
   }
   return audioEl;
 }
@@ -54,4 +55,10 @@ export function playNewOrderWebSound() {
   el.play().catch((err) => {
     console.warn("[OfisNow] Web bildirim sesi çalınamadı", err);
   });
+
+  // Sessiz/titreşim modundaki Android cihazlarda ekstra dikkat çekici olarak
+  // titreşim de tetiklenir (iOS Safari bu API'yi desteklemediği için no-op'tur).
+  if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
+    navigator.vibrate([200, 100, 200, 100, 200]);
+  }
 }
