@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { router, useFocusEffect } from "expo-router";
 import { setStatusBarStyle } from "expo-status-bar";
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -16,6 +16,7 @@ import { useOrdersRealtime } from "@/hooks/useOrdersRealtime";
 import { claimOrder, completeOrder, fetchWaiterDashboard } from "@/lib/api/orders";
 import { showAlert } from "@/lib/alert";
 import { toFriendlyErrorMessage } from "@/lib/supabase";
+import { initWebOrderSoundUnlock, playNewOrderWebSound } from "@/lib/webOrderSound";
 import { colors, spacing, typography } from "@/constants/theme";
 
 export default function WaiterDashboardScreen() {
@@ -24,10 +25,18 @@ export default function WaiterDashboardScreen() {
   const { data, loading, error, refreshing, refetch } = useAsyncData(fetchWaiterDashboard, []);
   const [pendingIds, setPendingIds] = useState<Record<string, boolean>>({});
 
+  useEffect(() => initWebOrderSoundUnlock(), []);
+
   useOrdersRealtime(
-    useCallback(() => {
-      refetch();
-    }, [refetch])
+    useCallback(
+      (eventType) => {
+        if (eventType === "INSERT") {
+          playNewOrderWebSound();
+        }
+        refetch();
+      },
+      [refetch]
+    )
   );
 
   useFocusEffect(
