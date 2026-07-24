@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { router } from "expo-router";
 import { FlatList, StyleSheet, Text, View } from "react-native";
 
@@ -7,11 +8,14 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { LoadingView } from "@/components/ui/LoadingView";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useAsyncData } from "@/hooks/useAsyncData";
+import { useOrdersRealtime } from "@/hooks/useOrdersRealtime";
 import { fetchMyOrderHistory } from "@/lib/api/orders";
 import { colors, spacing, typography } from "@/constants/theme";
 
 export default function MyOrderHistoryScreen() {
   const { data, loading, error, refreshing, refetch } = useAsyncData(() => fetchMyOrderHistory(50), []);
+
+  useOrdersRealtime(useCallback(() => refetch(), [refetch]));
 
   return (
     <ScreenContainer>

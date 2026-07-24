@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -8,6 +8,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { LoadingView } from "@/components/ui/LoadingView";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useAsyncData } from "@/hooks/useAsyncData";
+import { useOrdersRealtime } from "@/hooks/useOrdersRealtime";
 import { cancelOrder, fetchOrderById } from "@/lib/api/orders";
 import { showAlert } from "@/lib/alert";
 import { safeGoBack } from "@/lib/navigation";
@@ -18,6 +19,8 @@ export default function EmployeeOrderDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: order, loading, error, refetch } = useAsyncData(() => fetchOrderById(id), [id]);
   const [cancelling, setCancelling] = useState(false);
+
+  useOrdersRealtime(useCallback(() => refetch(), [refetch]));
 
   async function handleCancel() {
     if (!order) return;

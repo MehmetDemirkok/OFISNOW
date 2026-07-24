@@ -14,6 +14,7 @@ import { useAuth } from "@/context/AuthContext";
 import { fetchCategories } from "@/lib/api/catalog";
 import { callWaiter, fetchMyActiveOrders, fetchMyOrderHistory, requestPickup } from "@/lib/api/orders";
 import { useAsyncData } from "@/hooks/useAsyncData";
+import { useOrdersRealtime } from "@/hooks/useOrdersRealtime";
 import { showAlert } from "@/lib/alert";
 import { toFriendlyErrorMessage } from "@/lib/supabase";
 import { colors, radius, shadows, spacing, typography } from "@/constants/theme";
@@ -34,6 +35,14 @@ export default function EmployeeHomeScreen() {
     recentOrders.refetch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useOrdersRealtime(
+    useCallback(() => {
+      activeOrders.refetch();
+      recentOrders.refetch();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+  );
 
   const isRefreshing = activeOrders.refreshing || categories.refreshing || recentOrders.refreshing;
   const activeCount = (activeOrders.data ?? []).length;

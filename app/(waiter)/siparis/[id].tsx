@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -9,6 +9,7 @@ import { LoadingView } from "@/components/ui/LoadingView";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useAsyncData } from "@/hooks/useAsyncData";
+import { useOrdersRealtime } from "@/hooks/useOrdersRealtime";
 import { claimOrder, completeOrder, fetchOrderById } from "@/lib/api/orders";
 import { showAlert } from "@/lib/alert";
 import { safeGoBack } from "@/lib/navigation";
@@ -19,6 +20,8 @@ export default function WaiterOrderDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: order, loading, error, refetch } = useAsyncData(() => fetchOrderById(id), [id]);
   const [processing, setProcessing] = useState(false);
+
+  useOrdersRealtime(useCallback(() => refetch(), [refetch]));
 
   async function handleClaim() {
     if (!order) return;
