@@ -112,16 +112,16 @@ export const tabBarScreenOptions = {
     left: spacing.md,
     right: spacing.md,
     bottom: spacing.md,
-    height: 68,
+    height: 80,
     borderRadius: radius.xl,
     backgroundColor: colors.surfaceContainerLowest,
     borderTopWidth: 0,
-    paddingBottom: 10,
-    paddingTop: 10,
+    paddingBottom: 12,
+    paddingTop: 8,
     ...shadows.lg,
   },
-  tabBarLabelStyle: { fontSize: 12, fontWeight: "700" as const },
-  tabBarItemStyle: { borderRadius: radius.lg },
+  tabBarLabelStyle: { fontSize: 12, lineHeight: 16, fontWeight: "700" as const },
+  tabBarItemStyle: { borderRadius: radius.lg, paddingVertical: 2 },
 } as const;
 
 export const statusLabels: Record<string, string> = {
