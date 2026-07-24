@@ -1,9 +1,11 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Platform } from "react-native";
 
 import { updateMyWebPushSubscription } from "@/lib/api/profiles";
 
 const VAPID_PUBLIC_KEY = process.env.EXPO_PUBLIC_VAPID_PUBLIC_KEY;
+
+export type WebPushStatus = "unsupported" | "unknown" | "default" | "denied" | "granted";
 
 function urlBase64ToUint8Array(base64Url: string): Uint8Array {
   const padding = "=".repeat((4 - (base64Url.length % 4)) % 4);
@@ -12,15 +14,21 @@ function urlBase64ToUint8Array(base64Url: string): Uint8Array {
   return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
 }
 
-async function subscribe() {
+function isSupported(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    "Notification" in window &&
+    "serviceWorker" in navigator &&
+    "PushManager" in window
+  );
+}
+
+/** İzin zaten "granted" olduğunda çağrılır: kullanıcı etkileşimi gerektirmez. */
+async function registerAndSubscribe() {
   if (!VAPID_PUBLIC_KEY) {
     console.warn("[OfisNow] EXPO_PUBLIC_VAPID_PUBLIC_KEY tanımlı değil, web push atlanıyor.");
     return;
   }
-  if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
-
-  const permission = await Notification.requestPermission();
-  if (permission !== "granted") return;
 
   const registration = await navigator.serviceWorker.register("/sw.js");
   await navigator.serviceWorker.ready;
@@ -38,18 +46,44 @@ async function subscribe() {
 
 /**
  * Ekran kilitliyken/PWA arka plandayken de gerçek sistem bildirimi alabilmek
- * için Web Push aboneliğini kaydeder (bkz. public/sw.js). Yalnızca web'de,
- * oturum açıkken ve tarayıcı destekliyorsa çalışır.
+ * için Web Push aboneliğini yönetir (bkz. public/sw.js).
+ *
+ * Tarayıcılar (özellikle Chrome/Android) bir kullanıcı etkileşimi olmadan
+ * (ör. sayfa yüklenir yüklenmez) tetiklenen `Notification.requestPermission()`
+ * çağrılarını "sessiz" modda ele alıp gerçek bir izin penceresi hiç
+ * göstermeden reddedebilir. Bu yüzden izin isteği yalnızca `requestAndSubscribe`
+ * ile, doğrudan bir buton tıklamasından çağrılmalıdır. İzin zaten verilmişse
+ * (ör. önceki oturumdan) etkileşim gerekmeden sessizce yeniden abone olunur.
  */
 export function useWebPushSubscription(enabled: boolean) {
-  const hasRun = useRef(false);
+  const [status, setStatus] = useState<WebPushStatus>("unknown");
 
   useEffect(() => {
-    if (Platform.OS !== "web" || !enabled || hasRun.current) return;
-    hasRun.current = true;
+    if (Platform.OS !== "web" || !enabled) return;
 
-    subscribe().catch((err) => {
-      console.error("[OfisNow] Web push aboneliği kurulamadı", err);
-    });
+    if (!isSupported()) {
+      setStatus("unsupported");
+      return;
+    }
+
+    setStatus(Notification.permission as WebPushStatus);
+
+    if (Notification.permission === "granted") {
+      registerAndSubscribe().catch((err) => {
+        console.error("[OfisNow] Web push aboneliği kurulamadı", err);
+      });
+    }
   }, [enabled]);
+
+  const requestAndSubscribe = useCallback(async () => {
+    if (Platform.OS !== "web" || !isSupported()) return;
+
+    const permission = await Notification.requestPermission();
+    setStatus(permission as WebPushStatus);
+    if (permission !== "granted") return;
+
+    await registerAndSubscribe();
+  }, []);
+
+  return { status, requestAndSubscribe };
 }

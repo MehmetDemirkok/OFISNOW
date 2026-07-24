@@ -23,6 +23,7 @@ import { toFriendlyErrorMessage } from "@/lib/supabase";
 import { colors, radius, spacing, typography, webShell } from "@/constants/theme";
 import type { UserRole } from "@/types/database";
 import { PwaInstallRow } from "@/components/ui/PwaInstallRow";
+import { WebPushEnableRow } from "@/components/ui/WebPushEnableRow";
 
 const roleLabels: Record<UserRole, string> = {
   employee: "Çalışan",
@@ -192,6 +193,7 @@ export function AccountCorner() {
                 </Pressable>
 
                 <PwaInstallRow />
+                <WebPushEnableRow />
 
                 {isEmployee && inviteCode ? (
                   <Pressable style={styles.inviteRow} onPress={handleCopyInviteCode} hitSlop={4}>
