@@ -39,6 +39,7 @@ export function WaiterOrderCard({
       <View style={styles.headerRow}>
         <View>
           <Text style={styles.employeeName}>{order.employee?.full_name ?? "Çalışan"}</Text>
+          {order.employee?.job_title ? <Text style={styles.jobTitle}>{order.employee.job_title}</Text> : null}
           <View style={styles.timeRow}>
             <MaterialIcons name="schedule" size={14} color={colors.onSurfaceVariant} />
             <Text style={styles.time}>{formatTime(order.created_at)}</Text>
@@ -143,6 +144,11 @@ const styles = StyleSheet.create({
   employeeName: {
     ...typography.headlineSm,
     color: colors.onSurface,
+  },
+  jobTitle: {
+    ...typography.labelMd,
+    color: colors.onSurfaceVariant,
+    marginTop: 1,
   },
   timeRow: {
     flexDirection: "row",

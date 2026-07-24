@@ -58,7 +58,7 @@ Deno.serve(async (req: Request) => {
       .from("orders")
       .select(
         `id, custom_location, company_id, order_type,
-         employee:profiles!orders_employee_id_fkey(full_name),
+         employee:profiles!orders_employee_id_fkey(full_name, job_title),
          location:locations(name),
          order_items(product_name, quantity)`
       )
@@ -94,7 +94,7 @@ Deno.serve(async (req: Request) => {
 
     // Supabase embed ilişkisi bire-bir olsa da PostgREST bazı durumlarda dizi
     // döndürebilir; her iki şekli de güvenle ele al.
-    const employee = firstOrValue(order.employee) as { full_name?: string } | null;
+    const employee = firstOrValue(order.employee) as { full_name?: string; job_title?: string | null } | null;
     const location = firstOrValue(order.location) as { name?: string } | null;
     const items = (order.order_items ?? []) as OrderItemRow[];
 
@@ -102,7 +102,11 @@ Deno.serve(async (req: Request) => {
     const isPickup = order.order_type === "pickup";
     const itemsSummary = items.map((it) => `${it.quantity}x ${it.product_name}`).join(", ");
     const locationName = location?.name ?? order.custom_location ?? "Belirtilmedi";
-    const employeeName = employee?.full_name ?? "Bir çalışan";
+    const employeeName = employee?.full_name
+      ? employee.job_title
+        ? `${employee.full_name} (${employee.job_title})`
+        : employee.full_name
+      : "Bir çalışan";
 
     const title = isPickup ? "🧹 Boş Toplama Ricası" : isCall ? "🔔 Görevli Çağrısı" : "🔔 Yeni Sipariş";
     const body = isPickup

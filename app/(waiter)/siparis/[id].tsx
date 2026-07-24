@@ -70,6 +70,7 @@ export default function WaiterOrderDetailScreen() {
           <View style={styles.topRow}>
             <View>
               <Text style={styles.employeeName}>{order.employee?.full_name ?? "Çalışan"}</Text>
+              {order.employee?.job_title ? <Text style={styles.jobTitle}>{order.employee.job_title}</Text> : null}
               <Text style={styles.time}>
                 {new Date(order.created_at).toLocaleString("tr-TR", {
                   hour: "2-digit",
@@ -186,6 +187,11 @@ const styles = StyleSheet.create({
   employeeName: {
     ...typography.headlineMd,
     color: colors.onSurface,
+  },
+  jobTitle: {
+    ...typography.labelMd,
+    color: colors.onSurfaceVariant,
+    marginTop: 1,
   },
   time: {
     ...typography.bodyMd,

@@ -88,7 +88,7 @@ export interface Order {
 /** Görevli ekranı ve sipariş detayı için siparişin ilişkili verilerle birlikte hali. */
 export interface OrderWithDetails extends Order {
   order_items: OrderItem[];
-  employee: Pick<Profile, "id" | "full_name"> | null;
+  employee: Pick<Profile, "id" | "full_name" | "job_title"> | null;
   location: Pick<Location, "id" | "name"> | null;
   seen_by_profile: Pick<Profile, "id" | "full_name"> | null;
 }

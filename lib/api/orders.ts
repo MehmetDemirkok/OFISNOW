@@ -3,7 +3,7 @@ import type { CartItemInput, Order, OrderWithDetails } from "@/types/database";
 
 const ORDER_DETAIL_SELECT = `*,
   order_items(*),
-  employee:profiles!orders_employee_id_fkey(id, full_name),
+  employee:profiles!orders_employee_id_fkey(id, full_name, job_title),
   location:locations(id, name),
   seen_by_profile:profiles!orders_seen_by_fkey(id, full_name)`;
 
