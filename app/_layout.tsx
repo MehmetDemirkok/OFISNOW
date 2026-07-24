@@ -8,6 +8,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useWaiterOrderSound } from "@/hooks/useWaiterOrderSound";
 import { useWebPushSubscription } from "@/hooks/useWebPushSubscription";
 import { AccountCorner } from "@/components/ui/AccountCorner";
 import { AppAlert } from "@/components/ui/AppAlert";
@@ -16,9 +17,10 @@ import { WebShell } from "@/components/ui/WebShell";
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function RootNavigator() {
-  const { loading, session } = useAuth();
+  const { loading, session, profile } = useAuth();
   useNotifications(!!session);
   useWebPushSubscription(!!session);
+  useWaiterOrderSound(!!session && profile?.role === "waiter");
 
   useEffect(() => {
     if (!loading) {
@@ -37,6 +39,9 @@ function RootNavigator() {
         <Stack.Screen name="forgot-password" />
         <Stack.Screen name="reset-password" />
         <Stack.Screen name="profile" />
+        <Stack.Screen name="hesap-ayarlari" />
+        <Stack.Screen name="yardim-destek" />
+        <Stack.Screen name="raporlarim" />
         <Stack.Screen name="(employee)" />
         <Stack.Screen name="(waiter)" />
       </Stack>

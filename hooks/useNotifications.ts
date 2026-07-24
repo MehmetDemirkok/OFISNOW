@@ -6,7 +6,16 @@ import { router } from "expo-router";
 
 import { updateMyPushToken } from "@/lib/api/profiles";
 
-const NEW_ORDER_CHANNEL_ID = "new-order";
+// Android bildirim kanalları oluşturulduktan sonra sesi DEĞİŞTİRİLEMEZ (OS
+// kısıtlaması) — cihazda kanal daha önce yanlış/eksik ses ile oluşturulmuşsa
+// (ör. .wav dosyası native derlemeye eklenmeden önce), o kanal o cihazda
+// sonsuza dek öyle kalır. Bu yüzden kanal ID'leri "v2" ile bitiyor: eski
+// kurulumlarda da temiz, doğru sesli yeni bir kanal oluşturulmasını garanti
+// eder. Bu ID'ler supabase/functions/notify-new-order ve
+// notify-order-cancelled Edge Function'larındaki channelId değerleriyle
+// BİREBİR aynı olmalı; biri değişirse diğeri de güncellenmeli.
+const NEW_ORDER_CHANNEL_ID = "orders-new-v2";
+const ORDER_CANCELLED_CHANNEL_ID = "orders-cancelled-v2";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -27,6 +36,16 @@ async function ensureAndroidChannel() {
     sound: "new_order.wav",
     vibrationPattern: [0, 250, 150, 250],
     lightColor: "#00236f",
+    bypassDnd: false,
+    enableVibrate: true,
+  });
+
+  await Notifications.setNotificationChannelAsync(ORDER_CANCELLED_CHANNEL_ID, {
+    name: "Sipariş İptali",
+    importance: Notifications.AndroidImportance.HIGH,
+    sound: "order_cancelled.wav",
+    vibrationPattern: [0, 300, 100, 300],
+    lightColor: "#ba1a1a",
     bypassDnd: false,
     enableVibrate: true,
   });

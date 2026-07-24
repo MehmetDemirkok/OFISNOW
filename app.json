@@ -28,8 +28,7 @@
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.POST_NOTIFICATIONS",
-        "android.permission.VIBRATE",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.VIBRATE"
       ]
     },
     "web": {
@@ -39,14 +38,22 @@
       "expo-router",
       "expo-status-bar",
       "expo-secure-store",
-      "expo-splash-screen",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#00236f"
+        }
+      ],
       [
         "expo-notifications",
         {
           "icon": "./assets/android-icon-monochrome.png",
           "color": "#00236f",
           "sounds": [
-            "./assets/sounds/new_order.wav"
+            "./assets/sounds/new_order.wav",
+            "./assets/sounds/order_cancelled.wav"
           ],
           "mode": "production"
         }

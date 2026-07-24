@@ -19,25 +19,13 @@ import { useAsyncData } from "@/hooks/useAsyncData";
 import { fetchOrRotateInviteCode } from "@/lib/api/company";
 import { updateMyLocation } from "@/lib/api/profiles";
 import { showAlert } from "@/lib/alert";
+import { getInitials } from "@/lib/initials";
 import { toFriendlyErrorMessage } from "@/lib/supabase";
-import { colors, radius, spacing, typography, webShell } from "@/constants/theme";
-import type { UserRole } from "@/types/database";
+import { colors, radius, roleLabels, spacing, typography, webShell } from "@/constants/theme";
 import { PwaInstallRow } from "@/components/ui/PwaInstallRow";
 import { WebPushEnableRow } from "@/components/ui/WebPushEnableRow";
 
-const roleLabels: Record<UserRole, string> = {
-  employee: "Çalışan",
-  waiter: "Görevli",
-};
-
 const INVITE_CODE_REFRESH_MS = 10 * 60 * 1000;
-
-function getInitials(fullName: string) {
-  const parts = fullName.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0]!.charAt(0).toUpperCase();
-  return (parts[0]!.charAt(0) + parts[parts.length - 1]!.charAt(0)).toUpperCase();
-}
 
 export function AccountCorner() {
   const { profile, signOut, refreshProfile } = useAuth();

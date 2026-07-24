@@ -142,7 +142,9 @@ async function sendExpoPush(
     title: info.title,
     body: info.body,
     sound: "new_order.wav",
-    channelId: "new-order",
+    // Android'de kanal ID'si hooks/useNotifications.ts ile BİREBİR aynı olmalı
+    // (Android kanal sesi oluşturulduktan sonra değiştirilemediği için "v2").
+    channelId: "orders-new-v2",
     priority: "high",
     data: { orderId: info.orderId, type: info.type },
   }));

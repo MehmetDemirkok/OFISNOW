@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { router, useFocusEffect } from "expo-router";
 import { setStatusBarStyle } from "expo-status-bar";
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -16,7 +16,6 @@ import { useOrdersRealtime } from "@/hooks/useOrdersRealtime";
 import { claimOrder, completeOrder, fetchWaiterDashboard } from "@/lib/api/orders";
 import { showAlert } from "@/lib/alert";
 import { toFriendlyErrorMessage } from "@/lib/supabase";
-import { initWebOrderSoundUnlock, playNewOrderWebSound, playOrderCancelledWebSound } from "@/lib/webOrderSound";
 import { colors, spacing, typography } from "@/constants/theme";
 
 export default function WaiterDashboardScreen() {
@@ -25,21 +24,10 @@ export default function WaiterDashboardScreen() {
   const { data, loading, error, refreshing, refetch } = useAsyncData(fetchWaiterDashboard, []);
   const [pendingIds, setPendingIds] = useState<Record<string, boolean>>({});
 
-  useEffect(() => initWebOrderSoundUnlock(), []);
-
-  useOrdersRealtime(
-    useCallback(
-      ({ eventType, newStatus, oldStatus }) => {
-        if (eventType === "INSERT") {
-          playNewOrderWebSound();
-        } else if (eventType === "UPDATE" && newStatus === "cancelled" && oldStatus !== "cancelled") {
-          playOrderCancelledWebSound();
-        }
-        refetch();
-      },
-      [refetch]
-    )
-  );
+  // Bildirim sesi + tarayıcı ses kilidi artık kökte (app/_layout.tsx,
+  // useWaiterOrderSound) çalınıyor — hangi sekmede olursa olsun kesintisiz
+  // çalışması için. Burada yalnızca bu ekranın verisini tazelemek kalıyor.
+  useOrdersRealtime(useCallback(() => refetch(), [refetch]));
 
   useFocusEffect(
     useCallback(() => {

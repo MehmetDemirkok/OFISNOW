@@ -20,13 +20,14 @@ import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { createOrder } from "@/lib/api/orders";
 import { showAlert } from "@/lib/alert";
 import { safeGoBack } from "@/lib/navigation";
+import { getProductOptionGroups } from "@/lib/productOptions";
 import { toFriendlyErrorMessage } from "@/lib/supabase";
 import { colors, radius, shadows, spacing, typography } from "@/constants/theme";
 import type { CartItemInput } from "@/types/database";
 
 export default function NewOrderScreen() {
   const { profile } = useAuth();
-  const { lines, increment, decrement, setSpecialRequest, clear } = useCart();
+  const { lines, increment, decrement, setSpecialRequest, setOptionChoice, clear } = useCart();
   const isConnected = useNetworkStatus();
 
   const [note, setNote] = useState("");
@@ -83,31 +84,62 @@ export default function NewOrderScreen() {
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Sepetiniz</Text>
-            {lines.map((line) => (
-              <View key={line.product.id} style={styles.cartLine}>
-                <View style={styles.cartLineHeader}>
-                  <Text style={styles.cartLineName}>
-                    {line.quantity}x {line.product.name}
-                  </Text>
-                  <View style={styles.cartLineButtons}>
-                    <Pressable onPress={() => decrement(line.product.id)} hitSlop={8}>
-                      <MaterialIcons name="remove-circle-outline" size={22} color={colors.outline} />
-                    </Pressable>
-                    <Text style={styles.cartLineQty}>{line.quantity}</Text>
-                    <Pressable onPress={() => increment(line.product)} hitSlop={8}>
-                      <MaterialIcons name="add-circle" size={22} color={colors.primary} />
-                    </Pressable>
+            {lines.map((line) => {
+              const optionGroups = getProductOptionGroups(line.product.name);
+
+              return (
+                <View key={line.product.id} style={styles.cartLine}>
+                  <View style={styles.cartLineHeader}>
+                    <Text style={styles.cartLineName}>
+                      {line.quantity}x {line.product.name}
+                    </Text>
+                    <View style={styles.cartLineButtons}>
+                      <Pressable onPress={() => decrement(line.product.id)} hitSlop={8}>
+                        <MaterialIcons name="remove-circle-outline" size={22} color={colors.outline} />
+                      </Pressable>
+                      <Text style={styles.cartLineQty}>{line.quantity}</Text>
+                      <Pressable onPress={() => increment(line.product)} hitSlop={8}>
+                        <MaterialIcons name="add-circle" size={22} color={colors.primary} />
+                      </Pressable>
+                    </View>
                   </View>
+
+                  {optionGroups.length > 0 ? (
+                    <View style={styles.optionGroups}>
+                      {optionGroups.map((group) => (
+                        <View key={group.key} style={styles.optionGroup}>
+                          <Text style={styles.optionGroupLabel}>{group.label}</Text>
+                          <View style={styles.optionChipRow}>
+                            {group.choices.map((choice) => {
+                              const active = line.selectedOptions[group.key] === choice;
+                              return (
+                                <Pressable
+                                  key={choice}
+                                  style={[styles.optionChip, active && styles.optionChipActive]}
+                                  onPress={() => setOptionChoice(line.product.id, group.key, choice)}
+                                >
+                                  <Text style={[styles.optionChipText, active && styles.optionChipTextActive]}>
+                                    {choice}
+                                  </Text>
+                                </Pressable>
+                              );
+                            })}
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                  ) : (
+                    <TextInput
+                      style={styles.specialInput}
+                      value={line.specialRequest}
+                      onChangeText={(text) => setSpecialRequest(line.product.id, text)}
+                      placeholder="Özel istek ekle (örn. Şekersiz)"
+                      placeholderTextColor={colors.outline}
+                    />
+                  )}
                 </View>
-                <TextInput
-                  style={styles.specialInput}
-                  value={line.specialRequest}
-                  onChangeText={(text) => setSpecialRequest(line.product.id, text)}
-                  placeholder="Özel istek ekle (örn. Şekersiz)"
-                  placeholderTextColor={colors.outline}
-                />
-              </View>
-            ))}
+              );
+            })}
           </View>
 
           <View style={styles.section}>
@@ -229,6 +261,44 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceContainerLowest,
     ...typography.bodyMd,
     color: colors.onSurface,
+  },
+  optionGroups: {
+    gap: spacing.sm,
+  },
+  optionGroup: {
+    gap: spacing.xs,
+  },
+  optionGroupLabel: {
+    ...typography.labelMd,
+    color: colors.onSurfaceVariant,
+  },
+  optionChipRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.xs,
+  },
+  optionChip: {
+    paddingHorizontal: spacing.sm,
+    height: 34,
+    borderRadius: radius.full,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.surfaceContainerLowest,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+  },
+  optionChipActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  optionChipText: {
+    ...typography.labelLg,
+    color: colors.onSurfaceVariant,
+    textTransform: "none",
+    letterSpacing: 0,
+  },
+  optionChipTextActive: {
+    color: "#ffffff",
   },
   noteInput: {
     minHeight: 72,

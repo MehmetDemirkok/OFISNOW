@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -15,7 +16,9 @@ import { Redirect, router } from "expo-router";
 import { Button } from "@/components/ui/Button";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useAuth } from "@/context/AuthContext";
-import { colors, radius, spacing, typography } from "@/constants/theme";
+import { clearLastAccount, getLastAccount, type LastAccount } from "@/lib/lastAccount";
+import { getInitials } from "@/lib/initials";
+import { colors, radius, shadows, spacing, typography } from "@/constants/theme";
 
 export default function LoginScreen() {
   const { session, signIn } = useAuth();
@@ -24,8 +27,25 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [lastAccount, setLastAccount] = useState<LastAccount | null>(null);
+  const passwordRef = useRef<TextInput>(null);
+
+  useEffect(() => {
+    getLastAccount().then(setLastAccount);
+  }, []);
 
   const canSubmit = email.trim().length > 3 && password.length >= 6 && !submitting;
+
+  function handleQuickLogin() {
+    if (!lastAccount) return;
+    setEmail(lastAccount.email);
+    passwordRef.current?.focus();
+  }
+
+  async function handleForgetAccount() {
+    await clearLastAccount();
+    setLastAccount(null);
+  }
 
   async function handleSubmit() {
     if (!canSubmit) return;
@@ -61,6 +81,29 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.form}>
+            {lastAccount && email.trim().length === 0 ? (
+              <Pressable style={styles.quickLoginCard} onPress={handleQuickLogin}>
+                {lastAccount.avatarUrl ? (
+                  <Image source={{ uri: lastAccount.avatarUrl }} style={styles.quickLoginAvatarImage} />
+                ) : (
+                  <View style={styles.quickLoginAvatar}>
+                    <Text style={styles.quickLoginAvatarText}>{getInitials(lastAccount.fullName)}</Text>
+                  </View>
+                )}
+                <View style={styles.quickLoginTextGroup}>
+                  <Text style={styles.quickLoginName} numberOfLines={1}>
+                    {lastAccount.fullName}
+                  </Text>
+                  <Text style={styles.quickLoginHint} numberOfLines={1}>
+                    Hızlı giriş için dokunun
+                  </Text>
+                </View>
+                <Pressable onPress={handleForgetAccount} hitSlop={10} style={styles.quickLoginForget}>
+                  <MaterialIcons name="close" size={18} color={colors.outline} />
+                </Pressable>
+              </Pressable>
+            ) : null}
+
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>E-posta</Text>
               <View style={styles.inputWrapper}>
@@ -84,6 +127,7 @@ export default function LoginScreen() {
               <View style={styles.inputWrapper}>
                 <MaterialIcons name="lock" size={20} color={colors.outline} />
                 <TextInput
+                  ref={passwordRef}
                   style={styles.input}
                   value={password}
                   onChangeText={setPassword}
@@ -165,6 +209,49 @@ const styles = StyleSheet.create({
   },
   form: {
     gap: spacing.md,
+  },
+  quickLoginCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    ...shadows.sm,
+  },
+  quickLoginAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.full,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  quickLoginAvatarText: {
+    ...typography.headlineSm,
+    color: "#ffffff",
+  },
+  quickLoginAvatarImage: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.full,
+    backgroundColor: colors.surfaceContainer,
+  },
+  quickLoginTextGroup: {
+    flex: 1,
+    gap: 2,
+  },
+  quickLoginName: {
+    ...typography.bodyLg,
+    fontWeight: "700",
+    color: colors.onSurface,
+  },
+  quickLoginHint: {
+    ...typography.labelMd,
+    color: colors.primary,
+  },
+  quickLoginForget: {
+    padding: spacing.xs,
   },
   inputGroup: {
     gap: spacing.xs,

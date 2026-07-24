@@ -1,5 +1,7 @@
 // OfisNow: design.md içindeki tasarım diline (renkler, aralıklar, tipografi) uyar.
 
+import type { UserRole } from "@/types/database";
+
 export const colors = {
   primary: "#4F46E5",
   primaryDark: "#3730A3",
@@ -124,6 +126,11 @@ export const tabBarScreenOptions = {
   tabBarItemStyle: { borderRadius: radius.lg, paddingVertical: 2 },
 } as const;
 
+export const roleLabels: Record<UserRole, string> = {
+  employee: "Çalışan",
+  waiter: "Görevli",
+};
+
 export const statusLabels: Record<string, string> = {
   new: "YENİ",
   seen: "GÖRÜLDÜ",
@@ -134,7 +141,7 @@ export const statusLabels: Record<string, string> = {
 /** Çalışan tarafında karmaşık ara durumlar gösterilmez: sadece 2 basit durum. */
 export const employeeStatusLabels: Record<string, string> = {
   new: "Sipariş Alındı",
-  seen: "Sipariş Alındı",
+  seen: "Siparişiniz Hazırlanıyor",
   completed: "Sipariş Tamamlandı",
   cancelled: "İptal Edildi",
 };

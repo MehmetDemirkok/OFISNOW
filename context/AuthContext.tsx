@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import * as Linking from "expo-linking";
 
+import { saveLastAccount } from "@/lib/lastAccount";
 import { supabase, toFriendlyErrorMessage } from "@/lib/supabase";
 import type { Profile } from "@/types/database";
 
@@ -47,7 +48,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(null);
       return;
     }
-    setProfile(data as Profile);
+    const nextProfile = data as Profile;
+    setProfile(nextProfile);
+    saveLastAccount({
+      email: nextProfile.email,
+      fullName: nextProfile.full_name,
+      avatarUrl: nextProfile.avatar_url,
+    });
   }, []);
 
   useEffect(() => {

@@ -62,7 +62,15 @@ export default function EmployeeOrderDetailScreen() {
         <ScrollView contentContainerStyle={styles.content}>
           <View style={styles.statusBanner}>
             <MaterialIcons
-              name={order.status === "completed" ? "check-circle" : order.status === "cancelled" ? "cancel" : "schedule"}
+              name={
+                order.status === "completed"
+                  ? "check-circle"
+                  : order.status === "cancelled"
+                    ? "cancel"
+                    : order.status === "seen"
+                      ? "restaurant"
+                      : "schedule"
+              }
               size={28}
               color={colors.primary}
             />

@@ -31,6 +31,13 @@ export default function WaiterTabsLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="hesabim"
+        options={{
+          title: "Hesabım",
+          tabBarIcon: ({ color, size }) => <MaterialIcons name="person" size={size} color={color} />,
+        }}
+      />
     </Tabs>
   );
 }

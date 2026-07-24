@@ -80,9 +80,17 @@ function attachRetryListeners() {
   events.forEach((event) => document.addEventListener(event, retry));
 }
 
-function playSound(key: SoundKey, vibratePattern: number[]) {
+function playOnce(key: SoundKey, onEnded?: () => void) {
   const el = getAudio(key);
   if (!el) return;
+
+  if (onEnded) {
+    const handleEnded = () => {
+      el.removeEventListener("ended", handleEnded);
+      onEnded();
+    };
+    el.addEventListener("ended", handleEnded);
+  }
 
   el.currentTime = 0;
   el.play().catch((err) => {
@@ -93,6 +101,10 @@ function playSound(key: SoundKey, vibratePattern: number[]) {
     pendingRetry.add(key);
     attachRetryListeners();
   });
+}
+
+function playSound(key: SoundKey, vibratePattern: number[], repeat = 1) {
+  playOnce(key, repeat > 1 ? () => playOnce(key) : undefined);
 
   // Sessiz/titreşim modundaki Android cihazlarda ekstra dikkat çekici olarak
   // titreşim de tetiklenir (iOS Safari bu API'yi desteklemediği için no-op'tur).
@@ -101,9 +113,12 @@ function playSound(key: SoundKey, vibratePattern: number[]) {
   }
 }
 
-/** Yeni sipariş geldiğinde web'de bildirim sesini çalar (garson ekranı). */
+/**
+ * Yeni sipariş geldiğinde web'de bildirim sesini çalar (garson ekranı).
+ * Dikkat çekmesi için ses arka arkaya 2 kez çalınır.
+ */
 export function playNewOrderWebSound() {
-  playSound("newOrder", [200, 100, 200, 100, 200]);
+  playSound("newOrder", [200, 100, 200, 100, 200], 2);
 }
 
 /** Sipariş iptal edildiğinde web'de farklı, düşük tonlu uyarı sesini çalar (garson ekranı). */

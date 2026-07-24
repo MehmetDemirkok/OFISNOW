@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { MaterialIcons } from "@expo/vector-icons";
-import { router } from "expo-router";
 import {
   ActivityIndicator,
   Image,
@@ -20,15 +19,9 @@ import { useAuth } from "@/context/AuthContext";
 import { showAlert } from "@/lib/alert";
 import { safeGoBack } from "@/lib/navigation";
 import { updateMyProfile, uploadMyAvatar } from "@/lib/api/profiles";
+import { getInitials } from "@/lib/initials";
 import { toFriendlyErrorMessage } from "@/lib/supabase";
-import { colors, radius, spacing, typography } from "@/constants/theme";
-
-function getInitials(fullName: string) {
-  const parts = fullName.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0]!.charAt(0).toUpperCase();
-  return (parts[0]!.charAt(0) + parts[parts.length - 1]!.charAt(0)).toUpperCase();
-}
+import { colors, radius, roleLabels, shadows, spacing, typography } from "@/constants/theme";
 
 function formatDateInput(text: string): string {
   const digits = text.replace(/\D/g, "").slice(0, 8);
@@ -58,6 +51,10 @@ function isoToDisplay(iso: string | null): string {
   if (!iso) return "";
   const [year, month, day] = iso.split("-");
   return `${day}.${month}.${year}`;
+}
+
+function formatJoinDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric" });
 }
 
 export default function ProfileScreen() {
@@ -148,7 +145,7 @@ export default function ProfileScreen() {
         <Pressable style={styles.backButton} onPress={() => safeGoBack(fallbackHref)} hitSlop={12}>
           <MaterialIcons name="arrow-back" size={22} color={colors.onSurface} />
         </Pressable>
-        <Text style={styles.title}>Profili Düzenle</Text>
+        <Text style={styles.title}>Bilgilerim</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -172,71 +169,99 @@ export default function ProfileScreen() {
               </View>
             </Pressable>
             <Text style={styles.avatarHint}>Fotoğrafı değiştirmek için dokunun</Text>
+
+            <Text style={styles.namePreview} numberOfLines={1}>
+              {fullName.trim() || profile.full_name}
+            </Text>
+            <View style={styles.roleChip}>
+              <Text style={styles.roleChipText}>{roleLabels[profile.role] ?? profile.role}</Text>
+            </View>
           </View>
 
-          <View style={styles.form}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Ad Soyad</Text>
-              <View style={styles.inputWrapper}>
-                <MaterialIcons name="person" size={20} color={colors.outline} />
-                <TextInput
-                  style={styles.input}
-                  value={fullName}
-                  onChangeText={setFullName}
-                  placeholder="Ad Soyad"
-                  placeholderTextColor={colors.outline}
-                  autoComplete="name"
-                  textContentType="name"
-                />
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Kişisel Bilgiler</Text>
+            <View style={styles.card}>
+              <View style={styles.fieldGroup}>
+                <Text style={styles.inputLabel}>Ad Soyad</Text>
+                <View style={styles.inputWrapper}>
+                  <MaterialIcons name="person" size={20} color={colors.outline} />
+                  <TextInput
+                    style={styles.input}
+                    value={fullName}
+                    onChangeText={setFullName}
+                    placeholder="Ad Soyad"
+                    placeholderTextColor={colors.outline}
+                    autoComplete="name"
+                    textContentType="name"
+                  />
+                </View>
+              </View>
+
+              <View style={styles.fieldGroup}>
+                <Text style={styles.inputLabel}>Ünvan</Text>
+                <View style={styles.inputWrapper}>
+                  <MaterialIcons name="badge" size={20} color={colors.outline} />
+                  <TextInput
+                    style={styles.input}
+                    value={jobTitle}
+                    onChangeText={setJobTitle}
+                    placeholder="Örn. Ofis Yöneticisi"
+                    placeholderTextColor={colors.outline}
+                  />
+                </View>
+              </View>
+
+              <View style={[styles.fieldGroup, { marginBottom: 0 }]}>
+                <Text style={styles.inputLabel}>Doğum Tarihi</Text>
+                <View style={styles.inputWrapper}>
+                  <MaterialIcons name="cake" size={20} color={colors.outline} />
+                  <TextInput
+                    style={styles.input}
+                    value={birthDateInput}
+                    onChangeText={(text) => setBirthDateInput(formatDateInput(text))}
+                    placeholder="GG.AA.YYYY"
+                    placeholderTextColor={colors.outline}
+                    keyboardType="number-pad"
+                    maxLength={10}
+                  />
+                </View>
               </View>
             </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Ünvan</Text>
-              <View style={styles.inputWrapper}>
-                <MaterialIcons name="badge" size={20} color={colors.outline} />
-                <TextInput
-                  style={styles.input}
-                  value={jobTitle}
-                  onChangeText={setJobTitle}
-                  placeholder="Örn. Ofis Yöneticisi"
-                  placeholderTextColor={colors.outline}
-                />
-              </View>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Doğum Tarihi</Text>
-              <View style={styles.inputWrapper}>
-                <MaterialIcons name="cake" size={20} color={colors.outline} />
-                <TextInput
-                  style={styles.input}
-                  value={birthDateInput}
-                  onChangeText={(text) => setBirthDateInput(formatDateInput(text))}
-                  placeholder="GG.AA.YYYY"
-                  placeholderTextColor={colors.outline}
-                  keyboardType="number-pad"
-                  maxLength={10}
-                />
-              </View>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>E-posta</Text>
-              <View style={[styles.inputWrapper, styles.inputWrapperDisabled]}>
-                <MaterialIcons name="email" size={20} color={colors.outline} />
-                <Text style={styles.readonlyValue}>{profile.email}</Text>
-              </View>
-            </View>
-
-            <Button
-              label={saving ? "Kaydediliyor..." : "Kaydet"}
-              onPress={handleSave}
-              disabled={!canSave}
-              loading={saving}
-              style={{ marginTop: spacing.sm }}
-            />
           </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Hesap Bilgisi</Text>
+            <View style={styles.card}>
+              <View style={styles.infoRow}>
+                <View style={styles.infoIconCircle}>
+                  <MaterialIcons name="email" size={18} color={colors.primary} />
+                </View>
+                <View style={styles.infoTextGroup}>
+                  <Text style={styles.infoLabel}>E-posta</Text>
+                  <Text style={styles.infoValue} numberOfLines={1}>
+                    {profile.email}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={[styles.infoRow, styles.infoRowDivider]}>
+                <View style={styles.infoIconCircle}>
+                  <MaterialIcons name="event" size={18} color={colors.primary} />
+                </View>
+                <View style={styles.infoTextGroup}>
+                  <Text style={styles.infoLabel}>Katılma Tarihi</Text>
+                  <Text style={styles.infoValue}>{formatJoinDate(profile.created_at)}</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+
+          <Button
+            label={saving ? "Kaydediliyor..." : "Kaydet"}
+            onPress={handleSave}
+            disabled={!canSave}
+            loading={saving}
+          />
         </ScrollView>
       </KeyboardAvoidingView>
     </ScreenContainer>
@@ -273,18 +298,18 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   avatarWrap: {
-    width: 96,
-    height: 96,
+    width: 104,
+    height: 104,
   },
   avatarImage: {
-    width: 96,
-    height: 96,
+    width: 104,
+    height: 104,
     borderRadius: radius.full,
     backgroundColor: colors.surfaceContainer,
   },
   avatarPlaceholder: {
-    width: 96,
-    height: 96,
+    width: 104,
+    height: 104,
     borderRadius: radius.full,
     backgroundColor: colors.primary,
     alignItems: "center",
@@ -298,8 +323,8 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 0,
     bottom: 0,
-    width: 32,
-    height: 32,
+    width: 34,
+    height: 34,
     borderRadius: radius.full,
     backgroundColor: colors.primary,
     alignItems: "center",
@@ -311,11 +336,40 @@ const styles = StyleSheet.create({
     ...typography.labelMd,
     color: colors.onSurfaceVariant,
   },
-  form: {
+  namePreview: {
+    ...typography.headlineMd,
+    color: colors.onSurface,
+    marginTop: spacing.sm,
+    maxWidth: "100%",
+  },
+  roleChip: {
+    marginTop: 2,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 4,
+    borderRadius: radius.full,
+    backgroundColor: colors.primaryFixed,
+  },
+  roleChipText: {
+    ...typography.labelMd,
+    color: colors.primary,
+    fontWeight: "700",
+  },
+  section: {
     gap: spacing.md,
   },
-  inputGroup: {
+  sectionTitle: {
+    ...typography.headlineSm,
+    color: colors.onSurface,
+  },
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    ...shadows.sm,
+  },
+  fieldGroup: {
     gap: spacing.xs,
+    marginBottom: spacing.md,
   },
   inputLabel: {
     ...typography.labelLg,
@@ -334,17 +388,40 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     height: 56,
   },
-  inputWrapperDisabled: {
-    backgroundColor: colors.surfaceContainer,
-  },
   input: {
     flex: 1,
     ...typography.bodyLg,
     color: colors.onSurface,
   },
-  readonlyValue: {
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+  },
+  infoRowDivider: {
+    borderTopWidth: 1,
+    borderTopColor: colors.outlineVariant,
+  },
+  infoIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.full,
+    backgroundColor: colors.primaryFixed,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  infoTextGroup: {
     flex: 1,
-    ...typography.bodyLg,
+    gap: 2,
+  },
+  infoLabel: {
+    ...typography.labelMd,
     color: colors.onSurfaceVariant,
+  },
+  infoValue: {
+    ...typography.bodyLg,
+    fontWeight: "600",
+    color: colors.onSurface,
   },
 });
