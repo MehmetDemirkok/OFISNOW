@@ -67,9 +67,8 @@ export function useNotifications(enabled: boolean) {
   const hasRegistered = useRef(false);
 
   useEffect(() => {
-    // Web'de Expo push token servisi (APNs/FCM) yok; ayrı bir web push
-    // (VAPID) kurulumu gerektirir. Sipariş güncellemeleri zaten Supabase
-    // Realtime ile geldiği için web'de push kaydı atlanır.
+    // Web'de Expo push token servisi (APNs/FCM) yok; web için ayrı VAPID
+    // tabanlı Web Push aboneliği useWebPushSubscription tarafından yönetilir.
     if (Platform.OS === "web") return;
     if (!enabled || hasRegistered.current) return;
     hasRegistered.current = true;

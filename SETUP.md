@@ -26,6 +26,8 @@ için canlıya almak üzere aşağıdaki adımları izleyin.
 8. `20260721000002_harden_security_definer_functions.sql` — `SECURITY DEFINER` fonksiyonlarda `search_path` sabitleme
 9. `20260721000003_revoke_anon_execute.sql` — RPC fonksiyonlarına `anon` erişimini kaldırma
 10. `20260721000004_remove_admin_role.sql` — **admin** rolünü kaldırır; kategori/ürün/konum yönetimi garson rolüne geçer
+11. `20260724000001_web_push_subscription.sql` — `profiles.web_push_subscription` kolonu, `update_my_web_push_subscription` RPC'si
+12. `20260724000002_notify_order_cancelled_webhook.sql` — sipariş iptalinde `notify-order-cancelled` Edge Function'ını tetikleyen `pg_net` webhook'u
 
 Ardından örnek verileri yüklemek için `supabase/seed.sql` dosyasını çalıştırın
 (kategoriler, konumlar, örnek ürünler).
@@ -98,6 +100,50 @@ Push bildirimleri yalnızca **gerçek cihazlarda** çalışır (simülatör/emü
 npx expo run:ios      # veya
 npx expo run:android
 ```
+
+## 8) Web Push (ekran kilitliyken/PWA arka plandayken bildirim)
+
+Web'de sayfa açık olsa bile telefon kilitlenince veya sekme arka plana
+atılınca normal ses/Realtime kodu çalışmaz. Bunun için gerçek **Web Push**
+(Service Worker + Push API + VAPID) kurulu: `public/sw.js`,
+`hooks/useWebPushSubscription.ts`, `profiles.web_push_subscription` kolonu ve
+`notify-new-order` / `notify-order-cancelled` Edge Function'ları buna göre
+güncellendi/eklendi ve deploy edildi. Geriye şu 2 manuel adım kalıyor:
+
+1. **VAPID anahtarları üretin** (bir kere, `npx web-push generate-vapid-keys`
+   ile üretilmiştir; kendi projeniz için yeniden üretmek isterseniz aynı
+   komutu çalıştırın):
+
+   ```bash
+   npx web-push generate-vapid-keys
+   ```
+
+2. **Private key'i Supabase Edge Function secret'ı olarak kaydedin** (repo'ya
+   ASLA yazılmaz). Supabase CLI kuruluysa:
+
+   ```bash
+   supabase secrets set \
+     VAPID_PUBLIC_KEY=<public-key> \
+     VAPID_PRIVATE_KEY=<private-key> \
+     VAPID_SUBJECT=mailto:destek@ofisnow.app \
+     --project-ref fsksmdubigkzlsdmrebt
+   ```
+
+   CLI yoksa: Supabase Dashboard > Project Settings > Edge Functions >
+   "Manage secrets" üzerinden aynı 3 değişkeni girin. Bu adım tamamlanana
+   kadar edge function'lar Web Push'u sessizce atlar (native/Expo push
+   bildirimleri bundan etkilenmez).
+
+3. **Public key'i istemciye tanıtın**: `.env` dosyanıza
+   `EXPO_PUBLIC_VAPID_PUBLIC_KEY=<public-key>` ekleyin ve web'i deploy
+   ettiğiniz platformda (ör. Vercel > Project Settings > Environment
+   Variables) aynı değişkeni tanımlayıp yeniden deploy edin.
+
+Kurulum tamamlanınca garson, hesap menüsünden "Uygulamayı Yükle" ile PWA'yı
+ana ekrana ekleyip tarayıcı bildirim iznini verdiğinde, ekran kilitliyken
+veya sekme kapalıyken de yeni sipariş/iptal bildirimi (ses + titreşimle)
+alır. iOS'ta bu yalnızca **iOS 16.4+** ve **ana ekrana eklenmiş** PWA'da
+çalışır; normal Safari sekmesinde çalışmaz (Apple kısıtlaması).
 
 ## Notlar
 

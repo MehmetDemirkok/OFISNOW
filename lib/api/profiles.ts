@@ -5,6 +5,12 @@ export async function updateMyPushToken(token: string): Promise<void> {
   if (error) throw error;
 }
 
+/** Web Push aboneliğini (PushSubscription.toJSON() çıktısı) kullanıcının profiline kaydeder. */
+export async function updateMyWebPushSubscription(subscription: object | null): Promise<void> {
+  const { error } = await supabase.rpc("update_my_web_push_subscription", { p_subscription: subscription });
+  if (error) throw error;
+}
+
 export async function updateMyLocation(locationDescription: string): Promise<void> {
   const { error } = await supabase.rpc("update_my_location", { p_location: locationDescription });
   if (error) throw error;

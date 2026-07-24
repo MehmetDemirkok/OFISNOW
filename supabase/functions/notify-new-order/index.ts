@@ -1,15 +1,25 @@
 // OfisNow: notify-new-order Edge Function
 //
 // Bir Supabase Database Webhook (orders tablosu, INSERT olayı) bu fonksiyonu
-// tetikler. Fonksiyon, aktif ve push_token'ı olan tüm görevlilere Expo Push
-// Notifications üzerinden anlık, yüksek öncelikli ve özel sesli bir bildirim
-// gönderir. Kurulum adımları için repo kökündeki SETUP.md dosyasına bakın.
+// tetikler. Fonksiyon, aktif görevlilere hem Expo Push Notifications (native
+// uygulama) hem de Web Push (tarayıcı/PWA, ekran kilitliyken de çalışır)
+// üzerinden anlık, özel sesli bir bildirim gönderir. Kurulum adımları için
+// repo kökündeki SETUP.md dosyasına bakın.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import webpush from "npm:web-push@3.6.7";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
+
+const VAPID_PUBLIC_KEY = Deno.env.get("VAPID_PUBLIC_KEY");
+const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY");
+const VAPID_SUBJECT = Deno.env.get("VAPID_SUBJECT") ?? "mailto:destek@ofisnow.app";
+
+if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+}
 
 interface WebhookPayload {
   type: "INSERT" | "UPDATE" | "DELETE";
@@ -19,7 +29,13 @@ interface WebhookPayload {
 
 interface WaiterProfile {
   id: string;
-  push_token: string;
+  push_token: string | null;
+  web_push_subscription: WebPushSubscriptionJson | null;
+}
+
+interface WebPushSubscriptionJson {
+  endpoint: string;
+  keys: { p256dh: string; auth: string };
 }
 
 interface OrderItemRow {
@@ -58,11 +74,11 @@ Deno.serve(async (req: Request) => {
     // görevlilerine gitmeli, başka şirketlerin görevlilerine sızmamalı.
     const { data: waiters, error: waitersError } = await supabase
       .from("profiles")
-      .select("id, push_token")
+      .select("id, push_token, web_push_subscription")
       .eq("role", "waiter")
       .eq("is_active", true)
       .eq("company_id", order.company_id)
-      .not("push_token", "is", null);
+      .or("push_token.not.is.null,web_push_subscription.not.is.null");
 
     if (waitersError) {
       console.error("notify-new-order: görevliler alınamadı", waitersError);
@@ -72,7 +88,7 @@ Deno.serve(async (req: Request) => {
     const activeWaiters = (waiters ?? []) as WaiterProfile[];
 
     if (activeWaiters.length === 0) {
-      console.warn("notify-new-order: push token'ı olan aktif görevli bulunamadı");
+      console.warn("notify-new-order: bildirim kaydı olan aktif görevli bulunamadı");
       return jsonResponse({ ok: true, sent: 0 }, 200);
     }
 
@@ -95,53 +111,103 @@ Deno.serve(async (req: Request) => {
         ? `${employeeName} sizi çağırıyor • ${locationName}`
         : `${employeeName} • ${itemsSummary} • ${locationName}`;
 
-    const messages = activeWaiters.map((w) => ({
-      to: w.push_token,
-      title,
-      body,
-      sound: "new_order.wav",
-      channelId: "new-order",
-      priority: "high",
-      data: { orderId: order.id, type: isPickup ? "pickup_request" : isCall ? "waiter_call" : "new_order" },
-    }));
+    const nativeWaiters = activeWaiters.filter((w) => w.push_token);
+    const webWaiters = activeWaiters.filter((w) => w.web_push_subscription);
 
-    const expoResponse = await fetch(EXPO_PUSH_URL, {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Accept-Encoding": "gzip, deflate",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(messages),
-    });
+    const [expoSent] = await Promise.all([
+      sendExpoPush(supabase, nativeWaiters, { title, body, orderId: order.id, type: isPickup ? "pickup_request" : isCall ? "waiter_call" : "new_order" }),
+      sendWebPush(supabase, webWaiters, { title, body, orderId: order.id }),
+    ]);
 
-    if (!expoResponse.ok) {
-      console.error("notify-new-order: expo push isteği başarısız", await expoResponse.text());
-      return jsonResponse({ error: "EXPO_PUSH_FAILED" }, 502);
-    }
-
-    const result = await expoResponse.json();
-    const tickets = Array.isArray(result?.data) ? result.data : [];
-
-    await Promise.all(
-      tickets.map(async (ticket: { status: string; details?: { error?: string } }, index: number) => {
-        if (ticket?.status !== "error") return;
-
-        console.error("notify-new-order: push gönderim hatası", ticket);
-        const waiter = activeWaiters[index];
-
-        if (ticket.details?.error === "DeviceNotRegistered" && waiter?.id) {
-          await supabase.from("profiles").update({ push_token: null }).eq("id", waiter.id);
-        }
-      })
-    );
-
-    return jsonResponse({ ok: true, sent: messages.length }, 200);
+    return jsonResponse({ ok: true, sent: expoSent + webWaiters.length }, 200);
   } catch (err) {
     console.error("notify-new-order: beklenmeyen hata", err);
     return jsonResponse({ error: "INTERNAL_ERROR" }, 500);
   }
 });
+
+async function sendExpoPush(
+  supabase: ReturnType<typeof createClient>,
+  waiters: WaiterProfile[],
+  info: { title: string; body: string; orderId: string; type: string }
+): Promise<number> {
+  if (waiters.length === 0) return 0;
+
+  const messages = waiters.map((w) => ({
+    to: w.push_token,
+    title: info.title,
+    body: info.body,
+    sound: "new_order.wav",
+    channelId: "new-order",
+    priority: "high",
+    data: { orderId: info.orderId, type: info.type },
+  }));
+
+  const expoResponse = await fetch(EXPO_PUSH_URL, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Accept-Encoding": "gzip, deflate",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(messages),
+  });
+
+  if (!expoResponse.ok) {
+    console.error("notify-new-order: expo push isteği başarısız", await expoResponse.text());
+    return 0;
+  }
+
+  const result = await expoResponse.json();
+  const tickets = Array.isArray(result?.data) ? result.data : [];
+
+  await Promise.all(
+    tickets.map(async (ticket: { status: string; details?: { error?: string } }, index: number) => {
+      if (ticket?.status !== "error") return;
+
+      console.error("notify-new-order: expo push gönderim hatası", ticket);
+      const waiter = waiters[index];
+
+      if (ticket.details?.error === "DeviceNotRegistered" && waiter?.id) {
+        await supabase.from("profiles").update({ push_token: null }).eq("id", waiter.id);
+      }
+    })
+  );
+
+  return messages.length;
+}
+
+async function sendWebPush(
+  supabase: ReturnType<typeof createClient>,
+  waiters: WaiterProfile[],
+  info: { title: string; body: string; orderId: string }
+): Promise<void> {
+  if (waiters.length === 0 || !VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return;
+
+  const payload = JSON.stringify({
+    title: info.title,
+    body: info.body,
+    orderId: info.orderId,
+    vibrate: [200, 100, 200, 100, 200],
+  });
+
+  await Promise.all(
+    waiters.map(async (w) => {
+      try {
+        await webpush.sendNotification(w.web_push_subscription, payload);
+      } catch (err) {
+        const statusCode = (err as { statusCode?: number })?.statusCode;
+        console.error("notify-new-order: web push gönderim hatası", statusCode, err);
+
+        // 404/410: abonelik artık geçersiz (tarayıcı bildirimi engellemiş, iptal
+        // edilmiş vb.); bir sonraki denemede tekrar hataya düşmemek için temizle.
+        if ((statusCode === 404 || statusCode === 410) && w.id) {
+          await supabase.from("profiles").update({ web_push_subscription: null }).eq("id", w.id);
+        }
+      }
+    })
+  );
+}
 
 function firstOrValue<T>(value: T | T[] | null | undefined): T | null {
   if (Array.isArray(value)) return value[0] ?? null;

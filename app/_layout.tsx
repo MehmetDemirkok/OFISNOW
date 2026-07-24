@@ -8,6 +8,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useWebPushSubscription } from "@/hooks/useWebPushSubscription";
 import { AccountCorner } from "@/components/ui/AccountCorner";
 import { AppAlert } from "@/components/ui/AppAlert";
 import { WebShell } from "@/components/ui/WebShell";
@@ -17,6 +18,7 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 function RootNavigator() {
   const { loading, session } = useAuth();
   useNotifications(!!session);
+  useWebPushSubscription(!!session);
 
   useEffect(() => {
     if (!loading) {
