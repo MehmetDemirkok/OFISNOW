@@ -67,6 +67,10 @@ export function useNotifications(enabled: boolean) {
   const hasRegistered = useRef(false);
 
   useEffect(() => {
+    // Web'de Expo push token servisi (APNs/FCM) yok; ayrı bir web push
+    // (VAPID) kurulumu gerektirir. Sipariş güncellemeleri zaten Supabase
+    // Realtime ile geldiği için web'de push kaydı atlanır.
+    if (Platform.OS === "web") return;
     if (!enabled || hasRegistered.current) return;
     hasRegistered.current = true;
 
@@ -82,6 +86,8 @@ export function useNotifications(enabled: boolean) {
   }, [enabled]);
 
   useEffect(() => {
+    if (Platform.OS === "web") return;
+
     const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
       const orderId = response.notification.request.content.data?.orderId as string | undefined;
       if (orderId) {

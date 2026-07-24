@@ -10,6 +10,7 @@ import { CartProvider } from "@/context/CartContext";
 import { useNotifications } from "@/hooks/useNotifications";
 import { AccountCorner } from "@/components/ui/AccountCorner";
 import { AppAlert } from "@/components/ui/AppAlert";
+import { WebShell } from "@/components/ui/WebShell";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -45,12 +46,14 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <AuthProvider>
-          <CartProvider>
-            <StatusBar style="dark" />
-            <RootNavigator />
-          </CartProvider>
-        </AuthProvider>
+        <WebShell>
+          <AuthProvider>
+            <CartProvider>
+              <StatusBar style="dark" />
+              <RootNavigator />
+            </CartProvider>
+          </AuthProvider>
+        </WebShell>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

@@ -39,6 +39,12 @@ export const colors = {
   outlineVariant: "#D8D7E8",
 } as const;
 
+/** WebShell ile aynı kırılma noktası/genişlik: masaüstünde modallar da bu genişliğe göre ortalanır. */
+export const webShell = {
+  breakpoint: 720,
+  maxWidth: 480,
+} as const;
+
 export const spacing = {
   xs: 4,
   sm: 8,

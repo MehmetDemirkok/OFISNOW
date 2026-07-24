@@ -20,7 +20,7 @@ import { fetchOrRotateInviteCode } from "@/lib/api/company";
 import { updateMyLocation } from "@/lib/api/profiles";
 import { showAlert } from "@/lib/alert";
 import { toFriendlyErrorMessage } from "@/lib/supabase";
-import { colors, radius, spacing, typography } from "@/constants/theme";
+import { colors, radius, spacing, typography, webShell } from "@/constants/theme";
 import type { UserRole } from "@/types/database";
 
 const roleLabels: Record<UserRole, string> = {
@@ -129,6 +129,10 @@ export function AccountCorner() {
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={closeSheet}>
         <Pressable style={styles.backdrop} onPress={closeSheet}>
+          {/* Modal (RN Web'de) tüm tarayıcı penceresine portallanır; masaüstünde
+              WebShell'in telefon genişliğindeki kabuğuyla hizalı kalması için
+              içerik burada aynı genişliğe ortalanır. */}
+          <View style={styles.backdropInner} pointerEvents="box-none">
           <Pressable style={[styles.sheet, { marginTop: insets.top + 64 }]} onPress={(e) => e.stopPropagation()}>
             {confirming ? (
               <>
@@ -255,6 +259,7 @@ export function AccountCorner() {
               </>
             )}
           </Pressable>
+          </View>
         </Pressable>
       </Modal>
     </View>
@@ -295,6 +300,12 @@ const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.35)",
+    alignItems: "center",
+  },
+  backdropInner: {
+    flex: 1,
+    width: "100%",
+    maxWidth: webShell.maxWidth,
     alignItems: "flex-end",
   },
   sheet: {
