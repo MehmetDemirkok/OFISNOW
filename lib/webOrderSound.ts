@@ -59,13 +59,39 @@ export function initWebOrderSoundUnlock() {
   };
 }
 
+const pendingRetry = new Set<SoundKey>();
+let retryListenersAttached = false;
+
+function attachRetryListeners() {
+  if (retryListenersAttached || typeof document === "undefined") return;
+  retryListenersAttached = true;
+
+  const events: Array<"pointerdown" | "keydown"> = ["pointerdown", "keydown"];
+  const retry = () => {
+    pendingRetry.forEach((key) => {
+      const el = getAudio(key);
+      el?.play().catch(() => {
+        // Hâlâ engelleniyorsa bir sonraki etkileşimde tekrar denenmeye devam eder.
+      });
+    });
+    pendingRetry.clear();
+  };
+
+  events.forEach((event) => document.addEventListener(event, retry));
+}
+
 function playSound(key: SoundKey, vibratePattern: number[]) {
   const el = getAudio(key);
   if (!el) return;
 
   el.currentTime = 0;
   el.play().catch((err) => {
-    console.warn(`[OfisNow] Web bildirim sesi çalınamadı (${key})`, err);
+    console.warn(`[OfisNow] Web bildirim sesi çalınamadı (${key}), sonraki dokunuşta tekrar denenecek`, err);
+    // Kullanıcı sayfayla hiç etkileşime girmeden bildirim gelirse tarayıcı
+    // otomatik ses çalmayı sessizce engelleyebilir. Kaybolup gitmesin diye,
+    // bir sonraki dokunuş/tuşta bu ses tekrar denenir.
+    pendingRetry.add(key);
+    attachRetryListeners();
   });
 
   // Sessiz/titreşim modundaki Android cihazlarda ekstra dikkat çekici olarak
