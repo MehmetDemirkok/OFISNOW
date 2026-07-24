@@ -71,6 +71,15 @@ export function toFriendlyErrorMessage(error: unknown): string {
   if (message.includes("User already registered")) {
     return "Bu e-posta adresiyle zaten bir hesap var.";
   }
+  if (message.includes("Token has expired or is invalid")) {
+    return "Kod hatalı ya da süresi dolmuş. Lütfen yeni bir kod iste.";
+  }
+  if (message.includes("New password should be different")) {
+    return "Yeni şifre, eski şifrenle aynı olamaz.";
+  }
+  if (message.includes("Password should be at least")) {
+    return "Şifre en az 6 karakter olmalı.";
+  }
 
   const code = error && typeof error === "object" && "code" in error ? String((error as { code?: unknown }).code) : "";
   if (code === "23503" || message.includes("foreign key constraint") || message.includes("violates foreign key")) {

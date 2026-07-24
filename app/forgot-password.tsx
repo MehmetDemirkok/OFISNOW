@@ -17,47 +17,46 @@ import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useAuth } from "@/context/AuthContext";
 import { colors, radius, spacing, typography } from "@/constants/theme";
 
-export default function LoginScreen() {
-  const { session, signIn } = useAuth();
+export default function ForgotPasswordScreen() {
+  const { session, requestPasswordReset } = useAuth();
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const canSubmit = email.trim().length > 3 && password.length >= 6 && !submitting;
+  const canSubmit = email.trim().length > 3 && !submitting;
+
+  if (session) return <Redirect href="/" />;
 
   async function handleSubmit() {
     if (!canSubmit) return;
     setError(null);
     setSubmitting(true);
     try {
-      await signIn(email.trim(), password);
+      await requestPasswordReset(email.trim());
+      router.push({ pathname: "/reset-password", params: { email: email.trim() } });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Giriş yapılamadı.");
+      setError(err instanceof Error ? err.message : "Kod gönderilemedi.");
     } finally {
       setSubmitting(false);
     }
   }
 
-  if (session) return <Redirect href="/" />;
-
   return (
     <ScreenContainer>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={{ flex: 1 }}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-        >
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+          <Pressable onPress={() => router.back()} hitSlop={8} style={styles.backButton}>
+            <MaterialIcons name="arrow-back" size={22} color={colors.onSurfaceVariant} />
+          </Pressable>
+
           <View style={styles.header}>
             <View style={styles.logoCircle}>
-              <MaterialIcons name="restaurant" size={32} color="#ffffff" />
+              <MaterialIcons name="lock-reset" size={32} color="#ffffff" />
             </View>
-            <Text style={styles.title}>OfisNow</Text>
-            <Text style={styles.subtitle}>Kurumsal sipariş sistemine giriş yapın</Text>
+            <Text style={styles.title}>Şifreni mi unuttun?</Text>
+            <Text style={styles.subtitle}>
+              E-posta adresini gir, sana 6 haneli bir doğrulama kodu gönderelim.
+            </Text>
           </View>
 
           <View style={styles.form}>
@@ -75,32 +74,8 @@ export default function LoginScreen() {
                   autoComplete="email"
                   keyboardType="email-address"
                   textContentType="emailAddress"
-                />
-              </View>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Şifre</Text>
-              <View style={styles.inputWrapper}>
-                <MaterialIcons name="lock" size={20} color={colors.outline} />
-                <TextInput
-                  style={styles.input}
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder="••••••••"
-                  placeholderTextColor={colors.outline}
-                  secureTextEntry={!showPassword}
-                  autoCapitalize="none"
-                  textContentType="password"
                   onSubmitEditing={handleSubmit}
                   returnKeyType="go"
-                />
-                <MaterialIcons
-                  name={showPassword ? "visibility-off" : "visibility"}
-                  size={20}
-                  color={colors.outline}
-                  onPress={() => setShowPassword((v) => !v)}
-                  suppressHighlighting
                 />
               </View>
             </View>
@@ -112,20 +87,16 @@ export default function LoginScreen() {
               </View>
             ) : null}
 
-            <Pressable onPress={() => router.push("/forgot-password")} hitSlop={8} style={styles.forgotLink}>
-              <Text style={styles.registerLinkText}>Şifreni mi unuttun?</Text>
-            </Pressable>
-
             <Button
-              label={submitting ? "Giriş yapılıyor..." : "GİRİŞ YAP"}
+              label={submitting ? "Gönderiliyor..." : "KOD GÖNDER"}
               onPress={handleSubmit}
               disabled={!canSubmit}
               loading={submitting}
               style={{ marginTop: spacing.sm }}
             />
 
-            <Pressable onPress={() => router.push("/register")} hitSlop={8} style={styles.registerLink}>
-              <Text style={styles.registerLinkText}>Hesabın yok mu? Kayıt ol</Text>
+            <Pressable onPress={() => router.replace("/login")} hitSlop={8} style={styles.registerLink}>
+              <Text style={styles.registerLinkText}>Giriş ekranına dön</Text>
             </Pressable>
           </View>
         </ScrollView>
@@ -140,6 +111,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: spacing.lg,
     gap: spacing.xl,
+  },
+  backButton: {
+    position: "absolute",
+    top: spacing.lg,
+    left: spacing.lg,
+    zIndex: 1,
+    padding: spacing.xs,
   },
   header: {
     alignItems: "center",
@@ -203,9 +181,6 @@ const styles = StyleSheet.create({
     ...typography.bodyMd,
     color: colors.onErrorContainer,
     flexShrink: 1,
-  },
-  forgotLink: {
-    alignItems: "flex-end",
   },
   registerLink: {
     alignItems: "center",

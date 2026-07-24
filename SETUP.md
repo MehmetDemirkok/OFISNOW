@@ -145,6 +145,81 @@ veya sekme kapalıyken de yeni sipariş/iptal bildirimi (ses + titreşimle)
 alır. iOS'ta bu yalnızca **iOS 16.4+** ve **ana ekrana eklenmiş** PWA'da
 çalışır; normal Safari sekmesinde çalışmaz (Apple kısıtlaması).
 
+## 9) Resend ile Auth E-postaları (localhost yönlendirmesini düzeltir)
+
+Supabase'in varsayılan e-posta gönderimi hem çirkin bir şablon kullanır hem de
+onay bağlantısı, Dashboard'daki **Site URL** ayarı (genelde `localhost:3000`)
+düzeltilmediği sürece kullanıcıyı boş bir localhost sayfasına yönlendirir.
+Bunu tamamen ortadan kaldırmak için Supabase'in kendi e-posta gönderimini
+devre dışı bırakıp yerine **Resend** üzerinden markalı, Türkçe e-postalar
+gönderen bir Auth Hook (`send-auth-email` Edge Function) kullanıyoruz.
+İlgili kod: `supabase/functions/send-auth-email/index.ts` ve ortak yardımcı
+`supabase/functions/_shared/resend.ts`.
+
+1. **Resend hesabı açın ve domain doğrulayın**: https://resend.com üzerinden
+   hesap oluşturun, kendi domaininizi (ör. `ofisnow.app`) DNS kayıtlarıyla
+   doğrulayın. Domain doğrulanana kadar test amaçlı yalnızca kendi Resend
+   hesabınıza kayıtlı e-posta adresine `onboarding@resend.dev` adresinden
+   gönderim yapabilirsiniz — üretimde gerçek kullanıcılara göndermek için
+   domain doğrulaması **zorunludur**.
+2. **API key oluşturun**: Resend Dashboard > API Keys > Create API Key.
+   Bu anahtarı repo'ya, `.env` dosyasına veya herhangi bir committed dosyaya
+   **asla yazmayın** — yalnızca Supabase Edge Function secret'ı olarak saklanır.
+3. **Edge Function'ı deploy edin**:
+
+   ```bash
+   supabase functions deploy send-auth-email --project-ref fsksmdubigkzlsdmrebt
+   ```
+
+4. **Auth Hook'u Dashboard'da etkinleştirin**: Supabase Dashboard >
+   Authentication > Hooks > "Send Email hook" > Enable. Hook türü olarak
+   "Edge Function" seçip `send-auth-email` fonksiyonunu bağlayın. Bu adım
+   otomatik olarak bir **Signing Secret** üretir (`v1,whsec_...` formatında);
+   bu değeri kopyalayın.
+5. **Secret'ları kaydedin** (CLI kuruluysa):
+
+   ```bash
+   supabase secrets set \
+     RESEND_API_KEY=<resend-api-key> \
+     SEND_EMAIL_HOOK_SECRET=<dashboard-dan-kopyalanan-v1-whsec-degeri> \
+     RESEND_FROM_EMAIL="OfisNow <no-reply@ofisnow.app>" \
+     --project-ref fsksmdubigkzlsdmrebt
+   ```
+
+   CLI yoksa: Project Settings > Edge Functions > "Manage secrets" üzerinden
+   aynı 3 değişkeni girin. `RESEND_FROM_EMAIL` domain doğrulanana kadar
+   `onboarding@resend.dev` olarak bırakılabilir.
+6. **Redirect URL'i izin listesine ekleyin**: Authentication > URL
+   Configuration > Redirect URLs kısmına `ofisnow://**` ekleyin. Uygulama
+   artık kayıt olurken `emailRedirectTo: "ofisnow://login"` gönderiyor
+   (bkz. `context/AuthContext.tsx`); bu satır olmadan Supabase bağlantıyı
+   reddedip Site URL'e (localhost) düşer — localhost sorununun asıl kökeni
+   budur. Site URL'i de gerçek bir değere (ör. `https://ofisnow.app` veya
+   yine `ofisnow://login`) güncellemeniz önerilir.
+
+Kurulum tamamlanınca yeni kayıt olanlara onay e-postası, OfisNow markalı
+Türkçe şablonla otomatik gider ve onay bağlantısı doğrudan mobil uygulamayı
+açar.
+
+### Şifremi Unuttum akışı
+
+Kayıt onayından farklı olarak şifre sıfırlama, mobil derin bağlantı (deep
+link) URL fragment'ı ayrıştırma karmaşasına girmemek için **6 haneli kod**
+üzerinden çalışır — tarayıcıdaki gizli bağlantılar yerine, tanıdık bir
+"SMS doğrulama kodu" deneyimi:
+
+1. Uygulamada `/forgot-password` ekranından e-posta girilir →
+   `supabase.auth.resetPasswordForEmail` çağrılır.
+2. `send-auth-email` hook'u `recovery` tipini yakalayıp Resend üzerinden
+   6 haneli kodu içeren e-postayı gönderir (bağlantı değil, kod — bkz.
+   `buildEmail` içindeki `recovery` case'i).
+3. Kullanıcı `/reset-password` ekranında kodu + yeni şifreyi girer →
+   `supabase.auth.verifyOtp({ type: "recovery" })` ile kod doğrulanır,
+   ardından `supabase.auth.updateUser({ password })` ile şifre güncellenir.
+
+Bu akış için ek bir secret veya Dashboard ayarı gerekmez; yukarıdaki 1-6
+adımları (Send Email Hook aktif + secret'lar tanımlı) yeterlidir.
+
 ## Notlar
 
 - `assets/sounds/new-order.wav` örnek/placeholder bir bildirim sesidir;

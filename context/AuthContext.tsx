@@ -28,6 +28,8 @@ interface AuthContextValue {
   ) => Promise<{ needsEmailConfirm: boolean }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  requestPasswordReset: (email: string) => Promise<void>;
+  confirmPasswordReset: (email: string, code: string, newPassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -97,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: metadata },
+        options: { data: metadata, emailRedirectTo: "ofisnow://login" },
       });
       if (error) throw new Error(toFriendlyErrorMessage(error));
       return { needsEmailConfirm: !data.session };
@@ -110,6 +112,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(null);
   }, []);
 
+  const requestPasswordReset = useCallback(async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: "ofisnow://reset-password",
+    });
+    if (error) throw new Error(toFriendlyErrorMessage(error));
+  }, []);
+
+  const confirmPasswordReset = useCallback(async (email: string, code: string, newPassword: string) => {
+    const { error: verifyError } = await supabase.auth.verifyOtp({
+      email,
+      token: code.trim(),
+      type: "recovery",
+    });
+    if (verifyError) throw new Error(toFriendlyErrorMessage(verifyError));
+
+    const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+    if (updateError) throw new Error(toFriendlyErrorMessage(updateError));
+
+    await supabase.auth.signOut();
+    setProfile(null);
+  }, []);
+
   const refreshProfile = useCallback(async () => {
     if (session?.user) {
       await loadProfile(session.user.id);
@@ -117,8 +141,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [session, loadProfile]);
 
   const value = useMemo(
-    () => ({ session, profile, loading, signIn, signUp, signOut, refreshProfile }),
-    [session, profile, loading, signIn, signUp, signOut, refreshProfile]
+    () => ({
+      session,
+      profile,
+      loading,
+      signIn,
+      signUp,
+      signOut,
+      refreshProfile,
+      requestPasswordReset,
+      confirmPasswordReset,
+    }),
+    [
+      session,
+      profile,
+      loading,
+      signIn,
+      signUp,
+      signOut,
+      refreshProfile,
+      requestPasswordReset,
+      confirmPasswordReset,
+    ]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
