@@ -1,0 +1,42 @@
+<!-- OfisNow marka logosu: bell (anlık sipariş/çağrı bildirimi) + turuncu onay rozeti.
+     Diğer tüm ikon dosyaları (assets/icon.png, favicon, android adaptive/monochrome,
+     splash-icon, public/pwa/*) bu kaynağın türevleridir; değişiklik gerekirse
+     buradaki path/renk değerlerinden yeniden üretilebilir. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6366F1"/>
+      <stop offset="0.55" stop-color="#4F46E5"/>
+      <stop offset="1" stop-color="#00236F"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+
+  <!-- Bell glyph, centered around (512,470), local box ~ -190..190 x -200..190 -->
+  <g transform="translate(490,530)">
+    <path d="
+      M 0,-198
+      C 54,-198 96,-158 96,-108
+      C 96,-96 99,-84 106,-74
+      C 140,-26 158,32 158,92
+      L 158,108
+      C 158,120 149,129 137,129
+      L -137,129
+      C -149,129 -158,120 -158,108
+      L -158,92
+      C -158,32 -140,-26 -106,-74
+      C -99,-84 -96,-96 -96,-108
+      C -96,-158 -54,-198 0,-198
+      Z"
+      fill="#FFFFFF"/>
+    <!-- clapper -->
+    <circle cx="0" cy="176" r="34" fill="#FFFFFF"/>
+  </g>
+
+  <!-- Notification badge -->
+  <g transform="translate(658,350)">
+    <circle cx="0" cy="0" r="108" fill="#F97316" stroke="#00236F" stroke-width="14"/>
+    <path d="M -46,2 L -14,34 L 50,-38" fill="none" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
