@@ -55,7 +55,7 @@ export default function ForgotPasswordScreen() {
             </View>
             <Text style={styles.title}>Şifreni mi unuttun?</Text>
             <Text style={styles.subtitle}>
-              E-posta adresini gir, sana 6 haneli bir doğrulama kodu gönderelim.
+              E-posta adresini gir, sana bir doğrulama kodu gönderelim.
             </Text>
           </View>
 

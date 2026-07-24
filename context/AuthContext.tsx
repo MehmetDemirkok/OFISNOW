@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
+import * as Linking from "expo-linking";
 
 import { supabase, toFriendlyErrorMessage } from "@/lib/supabase";
 import type { Profile } from "@/types/database";
@@ -99,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: metadata, emailRedirectTo: "ofisnow://login" },
+        options: { data: metadata, emailRedirectTo: Linking.createURL("/login") },
       });
       if (error) throw new Error(toFriendlyErrorMessage(error));
       return { needsEmailConfirm: !data.session };
@@ -114,7 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const requestPasswordReset = useCallback(async (email: string) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: "ofisnow://reset-password",
+      redirectTo: Linking.createURL("/reset-password"),
     });
     if (error) throw new Error(toFriendlyErrorMessage(error));
   }, []);

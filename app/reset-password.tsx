@@ -85,8 +85,8 @@ export default function ResetPasswordScreen() {
             </View>
             <Text style={styles.title}>Kodu gir</Text>
             <Text style={styles.subtitle}>
-              {params.email ? `${params.email} adresine` : "E-postana"} gönderdiğimiz 6 haneli kodu ve
-              yeni şifreni gir.
+              {params.email ? `${params.email} adresine` : "E-postana"} gönderdiğimiz doğrulama kodunu
+              ve yeni şifreni gir.
             </Text>
           </View>
 
@@ -118,10 +118,10 @@ export default function ResetPasswordScreen() {
                   style={[styles.input, styles.codeInput]}
                   value={code}
                   onChangeText={setCode}
-                  placeholder="123456"
+                  placeholder="12345678"
                   placeholderTextColor={colors.outline}
                   keyboardType="number-pad"
-                  maxLength={6}
+                  maxLength={10}
                 />
               </View>
             </View>
