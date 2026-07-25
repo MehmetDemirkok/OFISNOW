@@ -59,7 +59,7 @@ export function WaiterOrderCard({
         </View>
       ) : isCall ? (
         <View style={styles.callBox}>
-          <MaterialIcons name="notifications-active" size={18} color={colors.tertiaryContainerText} />
+          <MaterialIcons name="notifications-active" size={18} color={colors.warning} />
           <Text style={styles.callText}>Görevli çağrısı</Text>
         </View>
       ) : (
@@ -161,14 +161,14 @@ const styles = StyleSheet.create({
     color: colors.onSurfaceVariant,
   },
   newBadge: {
-    backgroundColor: colors.tertiaryContainerBg,
+    backgroundColor: colors.warningContainer,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: radius.sm,
   },
   newBadgeText: {
     ...typography.labelLg,
-    color: colors.tertiaryContainerText,
+    color: colors.warning,
   },
   itemsBox: {
     backgroundColor: colors.surfaceContainerLow,
@@ -180,14 +180,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.xs,
-    backgroundColor: colors.tertiaryContainerBg,
+    backgroundColor: colors.warningContainer,
     borderRadius: radius.sm,
     padding: spacing.sm,
   },
   callText: {
     ...typography.bodyLg,
     fontWeight: "700",
-    color: colors.tertiaryContainerText,
+    color: colors.warning,
   },
   pickupBox: {
     flexDirection: "row",

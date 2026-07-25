@@ -3,24 +3,29 @@
 import type { UserRole } from "@/types/database";
 
 export const colors = {
-  primary: "#4F46E5",
-  primaryDark: "#3730A3",
-  primaryLight: "#818CF8",
-  primaryContainer: "#4338CA",
-  onPrimaryContainer: "#ffffff",
-  primaryFixed: "#EEF2FF",
+  primary: "#475b4c",
+  primaryDark: "#374b3d",
+  primaryLight: "#b5ccb9",
+  primaryContainer: "#5f7464",
+  onPrimaryContainer: "#e2f9e5",
+  primaryFixed: "#d1e8d5",
 
-  accent: "#F97316",
-  accentDark: "#EA580C",
-  accentContainer: "#FFEDD5",
-  onAccentContainer: "#C2410C",
+  // Marka ikinci vurgu rengi (M3 "tertiary" rolü) - adaçayının bir tonu daha koyusu.
+  accent: "#485b4c",
+  accentDark: "#394b3d",
+  accentContainer: "#607464",
+  onAccentContainer: "#e4f9e5",
 
-  secondary: "#0D9488",
-  secondaryContainer: "#99F6E4",
-  onSecondaryContainer: "#0F766E",
+  // Durum/uyarı vurgusu: "bekliyor" durumu ve boş toplama/görevli çağrısı gibi
+  // rica rozetleri için turkuaz - bilinçli olarak adaçayı ailesinin dışında
+  // tutulur (statü renklerinin birbirinden ayırt edilebilir kalması için).
+  secondary: "#0E7A6E",
+  secondaryContainer: "#D1F7F1",
+  onSecondaryContainer: "#0B5C53",
 
-  tertiaryContainerText: "#B45309",
-  tertiaryContainerBg: "#fef3c7",
+  // Durum/uyarı vurgusu: "yeni sipariş" ve "görevli çağrısı" rozetleri için amber.
+  warning: "#876400",
+  warningContainer: "#FFF4D9",
 
   error: "#ba1a1a",
   errorContainer: "#ffdad6",
@@ -28,17 +33,18 @@ export const colors = {
   success: "#15803d",
   successContainer: "#dcfce7",
 
-  background: "#FAFAFF",
-  surface: "#ffffff",
+  background: "#f9faf6",
+  surface: "#f9faf6",
   surfaceContainerLowest: "#ffffff",
-  surfaceContainerLow: "#F5F4FB",
-  surfaceContainer: "#EFEEF9",
-  surfaceContainerHigh: "#E8E6F5",
+  surfaceContainerLow: "#f3f4f0",
+  surfaceContainer: "#edeeea",
+  surfaceContainerHigh: "#e7e9e5",
+  surfaceContainerHighest: "#e2e3df",
 
-  onSurface: "#1B1B23",
-  onSurfaceVariant: "#48495A",
-  outline: "#7A7B8C",
-  outlineVariant: "#D8D7E8",
+  onSurface: "#1a1c1a",
+  onSurfaceVariant: "#434843",
+  outline: "#737873",
+  outlineVariant: "#c3c8c1",
 } as const;
 
 /** WebShell ile aynı kırılma noktası/genişlik: masaüstünde modallar da bu genişliğe göre ortalanır. */

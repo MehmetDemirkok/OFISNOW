@@ -1,41 +1,18 @@
-<!-- OfisNow marka logosu: buhar tüten fincan + yaprak, adaçayı yeşili gradyan.
-     Diğer tüm ikon dosyaları (assets/icon.png, favicon, android adaptive/monochrome,
-     splash-icon, public/pwa/*) bu kaynağın türevleridir; değişiklik gerekirse
-     buradaki path/renk değerlerinden yeniden üretilebilir. Bkz. assets/brand/logo-background.svg,
-     logo-foreground.svg, logo-monochrome.svg (adaptive icon katmanları). -->
+<!-- OfisNow adaptive icon / splash ön plan katmanı (şeffaf zemin, yalnızca glyph).
+     android-icon-foreground.png ve splash-icon.png buradan üretilir. -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#BFD8C9"/>
-      <stop offset="0.5" stop-color="#7FA98F"/>
-      <stop offset="1" stop-color="#3E6350"/>
-    </linearGradient>
-  </defs>
-
-  <rect width="1024" height="1024" fill="url(#bg)"/>
-
-  <!-- Fincan grubu, merkez ~ (512,560) -->
   <g transform="translate(512,488)">
-    <!-- tabak -->
     <ellipse cx="0" cy="192" rx="234" ry="42" fill="#FFFFFF"/>
-
-    <!-- fincan gövdesi + ağız (evenodd ile "delik" kesimi) -->
     <path d="
       M -172,-42 C -172,52 -142,146 -112,146 L 112,146 C 142,146 172,52 172,-42 Z
       M -172,-42 A 172,28 0 1,0 172,-42 A 172,28 0 1,0 -172,-42 Z"
       fill="#FFFFFF" fill-rule="evenodd"/>
-
-    <!-- kulp -->
     <path d="M 172,-4 C 236,-4 236,112 172,112"
       fill="none" stroke="#FFFFFF" stroke-width="32" stroke-linecap="round"/>
-
-    <!-- buhar -->
     <path d="M -46,-78 C -80,-118 -18,-142 -46,-186"
       fill="none" stroke="#FFFFFF" stroke-width="22" stroke-linecap="round" opacity="0.95"/>
     <path d="M 34,-78 C 4,-114 58,-140 30,-178"
       fill="none" stroke="#FFFFFF" stroke-width="22" stroke-linecap="round" opacity="0.95"/>
-
-    <!-- yaprak vurgusu -->
     <g transform="translate(78,-150) rotate(28)">
       <path d="M 0,-46 C 40,-46 62,-18 62,10 C 62,38 40,46 0,46 C -40,46 -62,38 -62,10 C -62,-18 -40,-46 0,-46 Z"
         fill="#EAF6EF"/>

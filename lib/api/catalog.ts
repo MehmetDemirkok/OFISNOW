@@ -69,6 +69,7 @@ export async function createProduct(input: {
   category_id: string;
   name: string;
   description: string | null;
+  image_url?: string | null;
 }) {
   const { error } = await supabase.from("products").insert(input);
   if (error) throw error;
@@ -82,4 +83,19 @@ export async function updateProduct(id: string, patch: Partial<Product>) {
 export async function deleteProduct(id: string): Promise<void> {
   const { error } = await supabase.from("products").delete().eq("id", id);
   if (error) throw error;
+}
+
+/** Seçilen görseli `product-images/{companyId}/{timestamp}.jpg` yoluna yükler ve genel URL'sini döndürür. */
+export async function uploadProductImage(companyId: string, uri: string): Promise<string> {
+  const response = await fetch(uri);
+  const blob = await response.blob();
+  const path = `${companyId}/${Date.now()}.jpg`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("product-images")
+    .upload(path, blob, { contentType: "image/jpeg", upsert: true });
+  if (uploadError) throw uploadError;
+
+  const { data } = supabase.storage.from("product-images").getPublicUrl(path);
+  return data.publicUrl;
 }

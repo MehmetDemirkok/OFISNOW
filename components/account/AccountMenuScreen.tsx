@@ -5,7 +5,6 @@ import { router } from "expo-router";
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Button } from "@/components/ui/Button";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useAuth } from "@/context/AuthContext";
 import { showAlert } from "@/lib/alert";
@@ -71,8 +70,8 @@ export function AccountMenuScreen({ historyHref }: { historyHref: Href }) {
       icon: "support-agent",
       label: "Yardım ve Destek",
       onPress: () => router.push("/yardim-destek"),
-      iconColor: colors.tertiaryContainerText,
-      iconBg: colors.tertiaryContainerBg,
+      iconColor: colors.warning,
+      iconBg: colors.warningContainer,
     },
     {
       icon: "settings",
@@ -112,13 +111,18 @@ export function AccountMenuScreen({ historyHref }: { historyHref: Href }) {
           <Text style={styles.screenTitle}>Hesabım</Text>
 
           <View style={styles.profileHeader}>
-            {profile.avatar_url ? (
-              <Image source={{ uri: profile.avatar_url }} style={styles.avatarImage} />
-            ) : (
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>{getInitials(profile.full_name)}</Text>
+            <View style={styles.avatarWrap}>
+              {profile.avatar_url ? (
+                <Image source={{ uri: profile.avatar_url }} style={styles.avatarImage} />
+              ) : (
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>{getInitials(profile.full_name)}</Text>
+                </View>
+              )}
+              <View style={styles.verifiedBadge}>
+                <MaterialIcons name="verified" size={16} color={colors.onSecondaryContainer} />
               </View>
-            )}
+            </View>
             <Text style={styles.name} numberOfLines={1}>
               {profile.full_name}
             </Text>
@@ -137,13 +141,15 @@ export function AccountMenuScreen({ historyHref }: { historyHref: Href }) {
             ))}
           </View>
 
-          <Button
-            label="Çıkış Yap"
+          <Pressable
+            style={({ pressed }) => [styles.signOutButton, pressed && styles.signOutButtonPressed]}
             onPress={handleSignOutPress}
-            variant="danger"
-            icon={<MaterialIcons name="logout" size={20} color="#ffffff" />}
-            style={styles.signOutButton}
-          />
+          >
+            <MaterialIcons name="logout" size={20} color={colors.error} />
+            <Text style={styles.signOutText}>Çıkış Yap</Text>
+          </Pressable>
+
+          <Text style={styles.footerText}>OfisNow v1.0.0</Text>
         </View>
       </ScrollView>
     </ScreenContainer>
@@ -191,6 +197,11 @@ const styles = StyleSheet.create({
     gap: 2,
     marginTop: spacing.lg,
   },
+  avatarWrap: {
+    width: 88,
+    height: 88,
+    marginBottom: spacing.sm,
+  },
   avatar: {
     width: 88,
     height: 88,
@@ -198,7 +209,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: spacing.sm,
     borderWidth: 3,
     borderColor: "rgba(255,255,255,0.5)",
   },
@@ -210,10 +220,22 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: radius.full,
-    marginBottom: spacing.sm,
     backgroundColor: colors.surfaceContainer,
     borderWidth: 3,
     borderColor: "rgba(255,255,255,0.5)",
+  },
+  verifiedBadge: {
+    position: "absolute",
+    right: -2,
+    bottom: spacing.sm - 2,
+    width: 28,
+    height: 28,
+    borderRadius: radius.full,
+    backgroundColor: colors.secondaryContainer,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: colors.primaryDark,
   },
   name: {
     ...typography.headlineMd,
@@ -257,9 +279,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceContainerLow,
   },
   rowIconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.full,
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
     backgroundColor: colors.primaryFixed,
     alignItems: "center",
     justifyContent: "center",
@@ -271,6 +293,29 @@ const styles = StyleSheet.create({
     color: colors.onSurface,
   },
   signOutButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.sm,
+    height: 52,
     marginTop: spacing.xs,
+    borderRadius: radius.lg,
+    borderWidth: 2,
+    borderColor: colors.errorContainer,
+    backgroundColor: colors.errorContainer,
+  },
+  signOutButtonPressed: {
+    opacity: 0.85,
+  },
+  signOutText: {
+    ...typography.bodyLg,
+    fontWeight: "700",
+    color: colors.error,
+  },
+  footerText: {
+    ...typography.labelMd,
+    color: colors.outline,
+    textAlign: "center",
+    marginTop: spacing.sm,
   },
 });

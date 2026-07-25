@@ -1,33 +1,55 @@
 import { useCallback } from "react";
-import { router } from "expo-router";
-import { FlatList, StyleSheet, Text, View } from "react-native";
+import { router, useFocusEffect } from "expo-router";
+import { setStatusBarStyle } from "expo-status-bar";
+import { FlatList, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { EmployeeOrderCard } from "@/components/employee/EmployeeOrderCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { LoadingView } from "@/components/ui/LoadingView";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
+import { ScreenHero } from "@/components/ui/ScreenHero";
+import { useAuth } from "@/context/AuthContext";
 import { useAsyncData } from "@/hooks/useAsyncData";
 import { useOrdersRealtime } from "@/hooks/useOrdersRealtime";
 import { fetchMyOrderHistory } from "@/lib/api/orders";
-import { colors, spacing, typography } from "@/constants/theme";
+import { spacing } from "@/constants/theme";
 
 export default function MyOrderHistoryScreen() {
+  const { profile } = useAuth();
+  const insets = useSafeAreaInsets();
   const { data, loading, error, refreshing, refetch } = useAsyncData(() => fetchMyOrderHistory(50), []);
 
   useOrdersRealtime(useCallback(() => refetch(), [refetch]));
 
-  return (
-    <ScreenContainer>
-      <View style={styles.header}>
-        <Text style={styles.title}>Geçmiş Siparişler</Text>
-        <Text style={styles.subtitle}>Tamamlanan ve iptal edilen siparişleriniz</Text>
-      </View>
+  useFocusEffect(
+    useCallback(() => {
+      setStatusBarStyle("light");
+      return () => setStatusBarStyle("dark");
+    }, [])
+  );
 
+  const hero = (
+    <ScreenHero
+      title={`Merhaba ${profile?.full_name?.split(" ")[0] ?? ""} 👋`}
+      subtitle="Tamamlanan ve iptal edilen siparişleriniz"
+      topInset={insets.top}
+    />
+  );
+
+  return (
+    <ScreenContainer edges={["left", "right"]}>
       {loading ? (
-        <LoadingView />
+        <>
+          {hero}
+          <LoadingView />
+        </>
       ) : error ? (
-        <ErrorState message={error} onRetry={refetch} />
+        <>
+          {hero}
+          <ErrorState message={error} onRetry={refetch} />
+        </>
       ) : (
         <FlatList
           data={data ?? []}
@@ -35,6 +57,8 @@ export default function MyOrderHistoryScreen() {
           contentContainerStyle={styles.listContent}
           onRefresh={refetch}
           refreshing={refreshing}
+          ListHeaderComponent={hero}
+          ListHeaderComponentStyle={styles.listHeader}
           ListEmptyComponent={<EmptyState icon="history" title="Henüz sipariş geçmişiniz yok" />}
           renderItem={({ item }) => (
             <EmployeeOrderCard order={item} onPress={() => router.push(`/(employee)/siparis/${item.id}`)} />
@@ -47,23 +71,11 @@ export default function MyOrderHistoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.md,
-    gap: 2,
-  },
-  title: {
-    ...typography.headlineLg,
-    color: colors.onSurface,
-  },
-  subtitle: {
-    ...typography.bodyMd,
-    color: colors.onSurfaceVariant,
+  listHeader: {
+    marginBottom: spacing.md,
   },
   listContent: {
-    padding: spacing.md,
-    paddingTop: 0,
+    paddingHorizontal: spacing.md,
     paddingBottom: 140,
     flexGrow: 1,
   },

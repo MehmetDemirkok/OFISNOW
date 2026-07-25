@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
-import { MaterialIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   Modal,
   Pressable,
   ScrollView,
@@ -18,6 +19,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { LoadingView } from "@/components/ui/LoadingView";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useAsyncData } from "@/hooks/useAsyncData";
+import { useAuth } from "@/context/AuthContext";
 import {
   createCategory,
   createProduct,
@@ -27,10 +29,13 @@ import {
   fetchAllProducts,
   updateCategory,
   updateProduct,
+  uploadProductImage,
 } from "@/lib/api/catalog";
 import { showAlert } from "@/lib/alert";
 import { toFriendlyErrorMessage } from "@/lib/supabase";
-import { colors, radius, spacing, typography } from "@/constants/theme";
+import { productVisual } from "@/constants/productIcons";
+import { drinkImage } from "@/constants/drinkImages";
+import { colors, radius, shadows, spacing, typography } from "@/constants/theme";
 import type { Category, Product } from "@/types/database";
 
 interface CategoryModalState {
@@ -56,6 +61,8 @@ interface ProductModalState {
   description: string;
   categoryId: string | null;
   isActive: boolean;
+  imageUri: string | null;
+  imageChanged: boolean;
 }
 
 const PRODUCT_MODAL_DEFAULT: ProductModalState = {
@@ -65,9 +72,12 @@ const PRODUCT_MODAL_DEFAULT: ProductModalState = {
   description: "",
   categoryId: null,
   isActive: true,
+  imageUri: null,
+  imageChanged: false,
 };
 
 export default function CatalogScreen() {
+  const { profile } = useAuth();
   const {
     data: categories,
     loading: categoriesLoading,
@@ -86,6 +96,7 @@ export default function CatalogScreen() {
   const [categoryModal, setCategoryModal] = useState<CategoryModalState>(CATEGORY_MODAL_DEFAULT);
   const [productModal, setProductModal] = useState<ProductModalState>(PRODUCT_MODAL_DEFAULT);
   const [saving, setSaving] = useState(false);
+  const [pickingImage, setPickingImage] = useState(false);
 
   const loading = categoriesLoading || productsLoading;
   const error = categoriesError || productsError;
@@ -207,6 +218,8 @@ export default function CatalogScreen() {
       description: "",
       categoryId: categoryId ?? categories?.[0]?.id ?? null,
       isActive: true,
+      imageUri: null,
+      imageChanged: false,
     });
   }
 
@@ -218,6 +231,8 @@ export default function CatalogScreen() {
       description: product.description ?? "",
       categoryId: product.category_id,
       isActive: product.is_active,
+      imageUri: product.image_url ?? null,
+      imageChanged: false,
     });
   }
 
@@ -225,22 +240,75 @@ export default function CatalogScreen() {
     setProductModal(PRODUCT_MODAL_DEFAULT);
   }
 
+  async function handlePickProductImage() {
+    setPickingImage(true);
+    try {
+      // Dinamik import: expo-image-picker'ın native modülü olmayan ortamlarda
+      // tüm ekranı çökertmek yerine yalnızca bu aksiyon başarısız olur.
+      const ImagePicker = await import("expo-image-picker");
+
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        showAlert("İzin gerekli", "Ürün görseli seçebilmek için galeri izni vermelisiniz.");
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.6,
+      });
+      if (result.canceled || !result.assets[0]) return;
+
+      setProductModal((prev) => ({ ...prev, imageUri: result.assets[0].uri, imageChanged: true }));
+    } catch (err) {
+      if (err instanceof Error && err.message.includes("Cannot find native module")) {
+        showAlert(
+          "Görsel seçilemiyor",
+          "Bu özellik için uygulamanın yeniden derlenmesi gerekiyor (npx expo run:ios / run:android)."
+        );
+        return;
+      }
+      showAlert("Hata", toFriendlyErrorMessage(err));
+    } finally {
+      setPickingImage(false);
+    }
+  }
+
+  function handleRemoveProductImage() {
+    setProductModal((prev) => ({ ...prev, imageUri: null, imageChanged: true }));
+  }
+
   async function handleSaveProduct() {
     if (!productModal.name.trim() || !productModal.categoryId || saving) return;
+    if (!profile?.company_id) {
+      showAlert("Hata", "Şirket bilginiz bulunamadı. Lütfen tekrar giriş yapmayı deneyin.");
+      return;
+    }
     setSaving(true);
     try {
+      let imageUrl: string | null | undefined;
+      if (productModal.imageChanged) {
+        imageUrl = productModal.imageUri
+          ? await uploadProductImage(profile.company_id, productModal.imageUri)
+          : null;
+      }
+
       if (productModal.editing) {
         await updateProduct(productModal.editing.id, {
           name: productModal.name.trim(),
           description: productModal.description.trim() || null,
           category_id: productModal.categoryId,
           is_active: productModal.isActive,
+          ...(imageUrl !== undefined ? { image_url: imageUrl } : {}),
         });
       } else {
         await createProduct({
           name: productModal.name.trim(),
           description: productModal.description.trim() || null,
           category_id: productModal.categoryId,
+          ...(imageUrl !== undefined ? { image_url: imageUrl } : {}),
         });
       }
       closeProductModal();
@@ -370,32 +438,47 @@ export default function CatalogScreen() {
                     {item.products.length === 0 ? (
                       <Text style={styles.emptyProductsText}>Bu kategoride henüz ürün yok.</Text>
                     ) : (
-                      item.products.map((product) => (
-                        <View
-                          key={product.id}
-                          style={[styles.productRow, !product.is_active && styles.productRowInactive]}
-                        >
-                          <View style={{ flex: 1 }}>
-                            <Text style={styles.productName}>{product.name}</Text>
-                            {product.description ? (
-                              <Text style={styles.productDescription} numberOfLines={1}>
-                                {product.description}
-                              </Text>
-                            ) : null}
+                      item.products.map((product) => {
+                        const visual = productVisual(product.name, item.category.name);
+                        const preset = drinkImage(product.name);
+                        return (
+                          <View
+                            key={product.id}
+                            style={[styles.productRow, !product.is_active && styles.productRowInactive]}
+                          >
+                            {product.image_url ? (
+                              <Image source={{ uri: product.image_url }} style={styles.productThumb} />
+                            ) : preset ? (
+                              <View style={[styles.productThumb, styles.productThumbPlaceholder, { backgroundColor: visual.bg }]}>
+                                <Image source={preset} style={styles.productThumbPreset} />
+                              </View>
+                            ) : (
+                              <View style={[styles.productThumb, styles.productThumbPlaceholder, { backgroundColor: visual.bg }]}>
+                                <MaterialCommunityIcons name={visual.icon} size={22} color={visual.fg} />
+                              </View>
+                            )}
+                            <View style={{ flex: 1 }}>
+                              <Text style={styles.productName}>{product.name}</Text>
+                              {product.description ? (
+                                <Text style={styles.productDescription} numberOfLines={1}>
+                                  {product.description}
+                                </Text>
+                              ) : null}
+                            </View>
+                            <Switch
+                              value={product.is_active}
+                              onValueChange={(v) => handleToggleProductActive(product, v)}
+                              trackColor={{ false: colors.outlineVariant, true: colors.primary }}
+                            />
+                            <Pressable onPress={() => openEditProduct(product)} hitSlop={10}>
+                              <MaterialIcons name="edit" size={18} color={colors.onSurfaceVariant} />
+                            </Pressable>
+                            <Pressable onPress={() => handleDeleteProduct(product)} hitSlop={10}>
+                              <MaterialIcons name="delete-outline" size={18} color={colors.error} />
+                            </Pressable>
                           </View>
-                          <Switch
-                            value={product.is_active}
-                            onValueChange={(v) => handleToggleProductActive(product, v)}
-                            trackColor={{ false: colors.outlineVariant, true: colors.primary }}
-                          />
-                          <Pressable onPress={() => openEditProduct(product)} hitSlop={10}>
-                            <MaterialIcons name="edit" size={18} color={colors.onSurfaceVariant} />
-                          </Pressable>
-                          <Pressable onPress={() => handleDeleteProduct(product)} hitSlop={10}>
-                            <MaterialIcons name="delete-outline" size={18} color={colors.error} />
-                          </Pressable>
-                        </View>
-                      ))
+                        );
+                      })
                     )}
 
                     <Pressable style={styles.addProductButton} onPress={() => openAddProduct(item.category.id)}>
@@ -476,6 +559,46 @@ export default function CatalogScreen() {
             <Text style={styles.modalTitle}>{productModal.editing ? "Ürünü Düzenle" : "Yeni Ürün"}</Text>
 
             <ScrollView contentContainerStyle={styles.modalScrollContent} keyboardShouldPersistTaps="handled">
+              <View style={[styles.field, { alignItems: "center" }]}>
+                <Pressable
+                  style={styles.imagePickerWrap}
+                  onPress={handlePickProductImage}
+                  disabled={pickingImage}
+                >
+                  {productModal.imageUri ? (
+                    <Image source={{ uri: productModal.imageUri }} style={styles.imagePickerPreview} />
+                  ) : (
+                    (() => {
+                      const preset = drinkImage(productModal.name);
+                      if (preset) {
+                        return <Image source={preset} style={styles.imagePickerPreview} />;
+                      }
+                      const preview = productVisual(
+                        productModal.name,
+                        categories?.find((c) => c.id === productModal.categoryId)?.name
+                      );
+                      return (
+                        <View style={[styles.imagePickerPlaceholder, { backgroundColor: preview.bg }]}>
+                          <MaterialCommunityIcons name={preview.icon} size={32} color={preview.fg} />
+                        </View>
+                      );
+                    })()
+                  )}
+                  <View style={styles.imagePickerBadge}>
+                    {pickingImage ? (
+                      <ActivityIndicator size="small" color="#ffffff" />
+                    ) : (
+                      <MaterialIcons name="photo-camera" size={14} color="#ffffff" />
+                    )}
+                  </View>
+                </Pressable>
+                {productModal.imageUri ? (
+                  <Pressable onPress={handleRemoveProductImage} hitSlop={8}>
+                    <Text style={styles.removeImageText}>Görseli kaldır</Text>
+                  </Pressable>
+                ) : null}
+              </View>
+
               <View style={styles.field}>
                 <Text style={styles.label}>Ürün Adı</Text>
                 <TextInput
@@ -663,7 +786,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.outlineVariant,
     padding: spacing.md,
-    paddingLeft: spacing.md + 22 + spacing.sm,
     gap: spacing.sm,
   },
   emptyProductsText: {
@@ -674,9 +796,31 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
+    padding: spacing.xs,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+    ...shadows.sm,
   },
   productRowInactive: {
     opacity: 0.5,
+  },
+  productThumb: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.md,
+    backgroundColor: colors.surfaceContainerHigh,
+    resizeMode: "cover",
+  },
+  productThumbPlaceholder: {
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.04)",
+  },
+  productThumbPreset: {
+    width: "72%",
+    height: "72%",
+    resizeMode: "contain",
   },
   productName: {
     ...typography.bodyMd,
@@ -731,6 +875,43 @@ const styles = StyleSheet.create({
   },
   field: {
     gap: spacing.xs,
+  },
+  imagePickerWrap: {
+    width: 88,
+    height: 88,
+  },
+  imagePickerPreview: {
+    width: 88,
+    height: 88,
+    borderRadius: radius.md,
+    backgroundColor: colors.surfaceContainerHigh,
+    resizeMode: "cover",
+  },
+  imagePickerPlaceholder: {
+    width: 88,
+    height: 88,
+    borderRadius: radius.md,
+    backgroundColor: colors.surfaceContainerHigh,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  imagePickerBadge: {
+    position: "absolute",
+    right: -2,
+    bottom: -2,
+    width: 28,
+    height: 28,
+    borderRadius: radius.full,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: colors.surface,
+  },
+  removeImageText: {
+    ...typography.labelMd,
+    color: colors.error,
+    marginTop: spacing.xs,
   },
   label: {
     ...typography.labelLg,

@@ -128,7 +128,7 @@ export default function EmployeeHomeScreen() {
           disabled={calling}
         >
           <View style={styles.callWaiterIconCircle}>
-            <MaterialIcons name="notifications-active" size={20} color="#ffffff" />
+            <MaterialIcons name="notifications-active" size={20} color={colors.onPrimaryContainer} />
           </View>
           <Text style={styles.callWaiterText}>{calling ? "Çağrılıyor..." : "Görevli Çağır"}</Text>
         </Pressable>
@@ -215,9 +215,9 @@ const styles = StyleSheet.create({
     height: 64,
     borderRadius: radius.lg,
     paddingHorizontal: spacing.md,
-    backgroundColor: colors.accent,
+    backgroundColor: colors.primaryContainer,
     ...shadows.lg,
-    shadowColor: colors.accentDark,
+    shadowColor: colors.primaryDark,
   },
   callWaiterButtonPressed: {
     opacity: 0.92,
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
   },
   callWaiterText: {
     ...typography.headlineSm,
-    color: "#ffffff",
+    color: colors.onPrimaryContainer,
   },
   pickupButton: {
     flexDirection: "row",
@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.headlineMd,
-    color: colors.onSurface,
+    color: colors.primary,
   },
   list: {
     gap: spacing.sm,

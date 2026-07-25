@@ -4,7 +4,7 @@ import { colors, radius, spacing, statusLabels, typography } from "@/constants/t
 import type { OrderStatus } from "@/types/database";
 
 const palette: Record<OrderStatus, { bg: string; fg: string }> = {
-  new: { bg: colors.tertiaryContainerBg, fg: colors.tertiaryContainerText },
+  new: { bg: colors.warningContainer, fg: colors.warning },
   seen: { bg: colors.primaryFixed, fg: colors.primary },
   completed: { bg: colors.successContainer, fg: colors.success },
   cancelled: { bg: colors.errorContainer, fg: colors.onErrorContainer },

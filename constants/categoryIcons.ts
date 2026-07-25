@@ -15,11 +15,11 @@ export function categoryIcon(categoryName: string): IconName {
 }
 
 const CATEGORY_PALETTE = [
-  { bg: "#EEF2FF", fg: "#4F46E5" },
-  { bg: "#FFEDD5", fg: "#F97316" },
-  { bg: "#CCFBF1", fg: "#0D9488" },
+  { bg: "#d1e8d5", fg: "#374b3d" },
+  { bg: "#FFF4D9", fg: "#876400" },
+  { bg: "#D1F7F1", fg: "#0E7A6E" },
   { bg: "#FFE4E6", fg: "#E11D48" },
-  { bg: "#FEF3C7", fg: "#D97706" },
+  { bg: "#e4f9e5", fg: "#394b3d" },
   { bg: "#EDE9FE", fg: "#7C3AED" },
 ] as const;
 

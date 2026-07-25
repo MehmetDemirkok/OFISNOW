@@ -8,7 +8,7 @@ const statusColors: Record<
   string,
   { bg: string; fg: string; bar: string; icon: keyof typeof MaterialIcons.glyphMap }
 > = {
-  new: { bg: colors.tertiaryContainerBg, fg: colors.tertiaryContainerText, bar: colors.tertiaryContainerText, icon: "schedule" },
+  new: { bg: colors.warningContainer, fg: colors.warning, bar: colors.warning, icon: "schedule" },
   seen: { bg: colors.secondaryContainer, fg: colors.onSecondaryContainer, bar: colors.secondary, icon: "restaurant" },
   completed: { bg: colors.successContainer, fg: colors.success, bar: colors.success, icon: "check-circle" },
   cancelled: { bg: colors.errorContainer, fg: colors.onErrorContainer, bar: colors.error, icon: "cancel" },

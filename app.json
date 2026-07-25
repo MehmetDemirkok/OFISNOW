@@ -20,7 +20,7 @@
     "android": {
       "package": "com.ofisnow.app",
       "adaptiveIcon": {
-        "backgroundColor": "#00236f",
+        "backgroundColor": "#3E6350",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -43,14 +43,14 @@
         {
           "image": "./assets/splash-icon.png",
           "resizeMode": "contain",
-          "backgroundColor": "#00236f"
+          "backgroundColor": "#3E6350"
         }
       ],
       [
         "expo-notifications",
         {
           "icon": "./assets/android-icon-monochrome.png",
-          "color": "#00236f",
+          "color": "#3E6350",
           "sounds": [
             "./assets/sounds/new_order.wav",
             "./assets/sounds/order_cancelled.wav"

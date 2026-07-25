@@ -35,7 +35,7 @@ async function ensureAndroidChannel() {
     importance: Notifications.AndroidImportance.HIGH,
     sound: "new_order.wav",
     vibrationPattern: [0, 250, 150, 250],
-    lightColor: "#00236f",
+    lightColor: "#3E6350",
     bypassDnd: false,
     enableVibrate: true,
   });

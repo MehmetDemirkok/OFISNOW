@@ -1,0 +1,21 @@
+<!-- OfisNow Android monokrom/notification katmanı (tek renk, şeffaf zemin).
+     android-icon-monochrome.png buradan üretilir; Android yalnızca alfa kanalını kullanır. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <g transform="translate(512,488)" fill="#FFFFFF">
+    <ellipse cx="0" cy="192" rx="234" ry="42"/>
+    <path d="
+      M -172,-42 C -172,52 -142,146 -112,146 L 112,146 C 142,146 172,52 172,-42 Z
+      M -172,-42 A 172,28 0 1,0 172,-42 A 172,28 0 1,0 -172,-42 Z"
+      fill-rule="evenodd"/>
+    <path d="M 172,-4 C 236,-4 236,112 172,112"
+      fill="none" stroke="#FFFFFF" stroke-width="32" stroke-linecap="round"/>
+    <path d="M -46,-78 C -80,-118 -18,-142 -46,-186"
+      fill="none" stroke="#FFFFFF" stroke-width="22" stroke-linecap="round"/>
+    <path d="M 34,-78 C 4,-114 58,-140 30,-178"
+      fill="none" stroke="#FFFFFF" stroke-width="22" stroke-linecap="round"/>
+    <g transform="translate(78,-150) rotate(28)">
+      <path d="M 0,-46 C 40,-46 62,-18 62,10 C 62,38 40,46 0,46 C -40,46 -62,38 -62,10 C -62,-18 -40,-46 0,-46 Z"
+        opacity="0.85"/>
+    </g>
+  </g>
+</svg>

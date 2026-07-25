@@ -183,8 +183,8 @@ export default function ReportsScreen() {
 
           <View style={styles.statGrid}>
             <View style={styles.statCard}>
-              <View style={[styles.statIconCircle, { backgroundColor: colors.tertiaryContainerBg }]}>
-                <MaterialIcons name="schedule" size={18} color={colors.tertiaryContainerText} />
+              <View style={[styles.statIconCircle, { backgroundColor: colors.warningContainer }]}>
+                <MaterialIcons name="schedule" size={18} color={colors.warning} />
               </View>
               <Text style={styles.statValue}>{data?.pendingCount ?? 0}</Text>
               <Text style={styles.statLabel}>{isWaiter ? "Bekleyen Sipariş" : "Aktif Siparişiniz"}</Text>
