@@ -201,6 +201,30 @@ Kurulum tamamlanınca yeni kayıt olanlara onay e-postası, OfisNow markalı
 Türkçe şablonla otomatik gider ve onay bağlantısı doğrudan mobil uygulamayı
 açar.
 
+> **Geçici durum (domain doğrulanana kadar):** Resend'de henüz doğrulanmış bir
+> domain olmadığı için Resend, `onboarding@resend.dev` adresinden yalnızca
+> hesap sahibinin kendi e-postasına gönderim yapabiliyor — gerçek kullanıcılara
+> giden kayıt onay e-postaları sessizce başarısız oluyor ve kullanıcılar
+> hesaplarını hiç onaylayamıyor. Bu yüzden **kayıt onayı geçici olarak
+> kapatıldı**: Supabase Dashboard > Authentication > Providers > Email >
+> **"Confirm email"** toggle'ı kapalı tutulmalı. Bu ayar kapalıyken
+> `supabase.auth.signUp()` kullanıcıyı otomatik onaylayıp anında bir session
+> döndürür; `context/AuthContext.tsx` içindeki `needsEmailConfirm: !data.session`
+> mantığı sayesinde uygulama tarafında **ek bir kod değişikliği gerekmez** —
+> kullanıcı kayıt olur olmaz doğrudan giriş yapmış olur, `send-auth-email`
+> hook'u `signup` tipi için hiç tetiklenmez.
+>
+> Domain doğrulandığında (Resend Dashboard > Domains) geri almak için:
+> 1. `RESEND_FROM_EMAIL` secret'ını doğrulanmış domain adresine güncelleyin
+>    (adım 5).
+> 2. Supabase Dashboard > Authentication > Providers > Email >
+>    **"Confirm email"** toggle'ını tekrar açın.
+>
+> `recovery` (Şifremi Unuttum) akışı bu geçici değişiklikten etkilenmez —
+> ayrı bir case olarak `send-auth-email` fonksiyonunda çalışmaya devam eder,
+> ancak domain doğrulanana kadar o da yalnızca hesap sahibinin kendi
+> e-postasına gidebilir.
+
 ### Şifremi Unuttum akışı
 
 Kayıt onayından farklı olarak şifre sıfırlama, mobil derin bağlantı (deep
