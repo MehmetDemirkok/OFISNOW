@@ -28,6 +28,8 @@ için canlıya almak üzere aşağıdaki adımları izleyin.
 10. `20260721000004_remove_admin_role.sql` — **admin** rolünü kaldırır; kategori/ürün/konum yönetimi garson rolüne geçer
 11. `20260724000001_web_push_subscription.sql` — `profiles.web_push_subscription` kolonu, `update_my_web_push_subscription` RPC'si
 12. `20260724000002_notify_order_cancelled_webhook.sql` — sipariş iptalinde `notify-order-cancelled` Edge Function'ını tetikleyen `pg_net` webhook'u
+13. `20260726000001_feedback.sql` — `feedback` tablosu ve `send_feedback` RPC'si (Hesabım > Geri Bildirim ekranı)
+14. `20260726000002_feedback_webhook.sql` — yeni geri bildirimde `notify-feedback` Edge Function'ını tetikleyen `pg_net` webhook'u
 
 Ardından örnek verileri yüklemek için `supabase/seed.sql` dosyasını çalıştırın
 (kategoriler, konumlar, örnek ürünler).
@@ -243,6 +245,31 @@ link) URL fragment'ı ayrıştırma karmaşasına girmemek için **6 haneli kod*
 
 Bu akış için ek bir secret veya Dashboard ayarı gerekmez; yukarıdaki 1-6
 adımları (Send Email Hook aktif + secret'lar tanımlı) yeterlidir.
+
+## 10) Geri Bildirim e-postalarını etkinleştirin
+
+Hesabım > Geri Bildirim Gönder ekranından gelen mesajlar `feedback` tablosuna
+yazılır ve `feedback_notify_new` tetikleyicisi `notify-feedback` Edge
+Function'ını çağırarak Resend üzerinden e-postaya çevirir (adım 9'daki
+`RESEND_API_KEY` / `RESEND_FROM_EMAIL` secret'larını kullanır).
+
+1. **Edge Function'ı deploy edin**:
+
+   ```bash
+   supabase functions deploy notify-feedback --project-ref fsksmdubigkzlsdmrebt
+   ```
+
+2. **(Opsiyonel) Alıcı e-postayı özelleştirin**: Varsayılan olarak
+   `mehmetdemirkok@gmail.com` adresine gider. Farklı bir adrese göndermek için:
+
+   ```bash
+   supabase secrets set FEEDBACK_NOTIFY_EMAIL=<hedef-eposta> --project-ref fsksmdubigkzlsdmrebt
+   ```
+
+> Adım 9'daki geçici Resend kısıtlaması (domain doğrulanana kadar yalnızca
+> hesap sahibinin kendi e-postasına gönderim) burada da geçerlidir; domain
+> doğrulanana kadar `FEEDBACK_NOTIFY_EMAIL`'i Resend hesabına kayıtlı
+> e-postadan farklı bir adrese ayarlamayın.
 
 ## Notlar
 
