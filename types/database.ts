@@ -101,3 +101,14 @@ export interface CartItemInput {
   quantity: number;
   special_request: string | null;
 }
+
+export type FeedbackCategory = "suggestion" | "bug" | "complaint" | "other";
+
+export interface Feedback {
+  id: string;
+  company_id: string;
+  user_id: string;
+  category: FeedbackCategory;
+  message: string;
+  created_at: string;
+}

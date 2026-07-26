@@ -74,6 +74,13 @@ export function AccountMenuScreen({ historyHref }: { historyHref: Href }) {
       iconBg: colors.warningContainer,
     },
     {
+      icon: "feedback",
+      label: "Geri Bildirim Gönder",
+      onPress: () => router.push("/geri-bildirim"),
+      iconColor: colors.success,
+      iconBg: colors.successContainer,
+    },
+    {
       icon: "settings",
       label: "Hesap Ayarları",
       onPress: () => router.push("/hesap-ayarlari"),
