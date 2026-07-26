@@ -13,6 +13,10 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 import { Redirect, router } from "expo-router";
 
+import { AnimatedErrorBanner } from "@/components/ui/AnimatedErrorBanner";
+import { AnimatedFadeIn } from "@/components/ui/AnimatedFadeIn";
+import { AnimatedLogo } from "@/components/ui/AnimatedLogo";
+import { AnimatedTextField } from "@/components/ui/AnimatedTextField";
 import { Button } from "@/components/ui/Button";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useAuth } from "@/context/AuthContext";
@@ -63,7 +67,7 @@ export default function LoginScreen() {
   if (session) return <Redirect href="/" />;
 
   return (
-    <ScreenContainer>
+    <ScreenContainer background="vivid">
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={{ flex: 1 }}
@@ -72,105 +76,98 @@ export default function LoginScreen() {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={styles.header}>
-            <View style={styles.logoCircle}>
-              <MaterialIcons name="restaurant" size={32} color="#ffffff" />
+          <AnimatedFadeIn offsetY={12}>
+            <View style={styles.header}>
+              <AnimatedLogo icon="restaurant" size={64} />
+              <Text style={styles.title}>OfisNow</Text>
+              <Text style={styles.subtitle}>Kurumsal sipariş sistemine giriş yapın</Text>
             </View>
-            <Text style={styles.title}>OfisNow</Text>
-            <Text style={styles.subtitle}>Kurumsal sipariş sistemine giriş yapın</Text>
-          </View>
+          </AnimatedFadeIn>
 
           <View style={styles.form}>
             {lastAccount && email.trim().length === 0 ? (
-              <Pressable style={styles.quickLoginCard} onPress={handleQuickLogin}>
-                {lastAccount.avatarUrl ? (
-                  <Image source={{ uri: lastAccount.avatarUrl }} style={styles.quickLoginAvatarImage} />
-                ) : (
-                  <View style={styles.quickLoginAvatar}>
-                    <Text style={styles.quickLoginAvatarText}>{getInitials(lastAccount.fullName)}</Text>
+              <AnimatedFadeIn delay={80} offsetY={10}>
+                <Pressable style={styles.quickLoginCard} onPress={handleQuickLogin}>
+                  {lastAccount.avatarUrl ? (
+                    <Image source={{ uri: lastAccount.avatarUrl }} style={styles.quickLoginAvatarImage} />
+                  ) : (
+                    <View style={styles.quickLoginAvatar}>
+                      <Text style={styles.quickLoginAvatarText}>{getInitials(lastAccount.fullName)}</Text>
+                    </View>
+                  )}
+                  <View style={styles.quickLoginTextGroup}>
+                    <Text style={styles.quickLoginName} numberOfLines={1}>
+                      {lastAccount.fullName}
+                    </Text>
+                    <Text style={styles.quickLoginHint} numberOfLines={1}>
+                      Hızlı giriş için dokunun
+                    </Text>
                   </View>
-                )}
-                <View style={styles.quickLoginTextGroup}>
-                  <Text style={styles.quickLoginName} numberOfLines={1}>
-                    {lastAccount.fullName}
-                  </Text>
-                  <Text style={styles.quickLoginHint} numberOfLines={1}>
-                    Hızlı giriş için dokunun
-                  </Text>
-                </View>
-                <Pressable onPress={handleForgetAccount} hitSlop={10} style={styles.quickLoginForget}>
-                  <MaterialIcons name="close" size={18} color={colors.outline} />
+                  <Pressable onPress={handleForgetAccount} hitSlop={10} style={styles.quickLoginForget}>
+                    <MaterialIcons name="close" size={18} color={colors.outline} />
+                  </Pressable>
                 </Pressable>
+              </AnimatedFadeIn>
+            ) : null}
+
+            <AnimatedFadeIn delay={120} offsetY={10}>
+              <AnimatedTextField
+                label="E-posta"
+                icon="email"
+                value={email}
+                onChangeText={setEmail}
+                placeholder="ornek@sirket.com"
+                autoCapitalize="none"
+                autoComplete="email"
+                keyboardType="email-address"
+                textContentType="emailAddress"
+              />
+            </AnimatedFadeIn>
+
+            <AnimatedFadeIn delay={180} offsetY={10}>
+              <AnimatedTextField
+                ref={passwordRef}
+                label="Şifre"
+                icon="lock"
+                value={password}
+                onChangeText={setPassword}
+                placeholder="••••••••"
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                textContentType="password"
+                onSubmitEditing={handleSubmit}
+                returnKeyType="go"
+                rightElement={
+                  <MaterialIcons
+                    name={showPassword ? "visibility-off" : "visibility"}
+                    size={20}
+                    color={colors.outline}
+                    onPress={() => setShowPassword((v) => !v)}
+                    suppressHighlighting
+                  />
+                }
+              />
+            </AnimatedFadeIn>
+
+            <AnimatedErrorBanner message={error} />
+
+            <AnimatedFadeIn delay={220} offsetY={10} style={{ gap: spacing.md }}>
+              <Pressable onPress={() => router.push("/forgot-password")} hitSlop={8} style={styles.forgotLink}>
+                <Text style={styles.registerLinkText}>Şifreni mi unuttun?</Text>
               </Pressable>
-            ) : null}
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>E-posta</Text>
-              <View style={styles.inputWrapper}>
-                <MaterialIcons name="email" size={20} color={colors.outline} />
-                <TextInput
-                  style={styles.input}
-                  value={email}
-                  onChangeText={setEmail}
-                  placeholder="ornek@sirket.com"
-                  placeholderTextColor={colors.outline}
-                  autoCapitalize="none"
-                  autoComplete="email"
-                  keyboardType="email-address"
-                  textContentType="emailAddress"
-                />
-              </View>
-            </View>
+              <Button
+                label={submitting ? "Giriş yapılıyor..." : "GİRİŞ YAP"}
+                onPress={handleSubmit}
+                disabled={!canSubmit}
+                loading={submitting}
+                style={{ marginTop: spacing.sm }}
+              />
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Şifre</Text>
-              <View style={styles.inputWrapper}>
-                <MaterialIcons name="lock" size={20} color={colors.outline} />
-                <TextInput
-                  ref={passwordRef}
-                  style={styles.input}
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder="••••••••"
-                  placeholderTextColor={colors.outline}
-                  secureTextEntry={!showPassword}
-                  autoCapitalize="none"
-                  textContentType="password"
-                  onSubmitEditing={handleSubmit}
-                  returnKeyType="go"
-                />
-                <MaterialIcons
-                  name={showPassword ? "visibility-off" : "visibility"}
-                  size={20}
-                  color={colors.outline}
-                  onPress={() => setShowPassword((v) => !v)}
-                  suppressHighlighting
-                />
-              </View>
-            </View>
-
-            {error ? (
-              <View style={styles.errorBox}>
-                <MaterialIcons name="error-outline" size={18} color={colors.error} />
-                <Text style={styles.errorText}>{error}</Text>
-              </View>
-            ) : null}
-
-            <Pressable onPress={() => router.push("/forgot-password")} hitSlop={8} style={styles.forgotLink}>
-              <Text style={styles.registerLinkText}>Şifreni mi unuttun?</Text>
-            </Pressable>
-
-            <Button
-              label={submitting ? "Giriş yapılıyor..." : "GİRİŞ YAP"}
-              onPress={handleSubmit}
-              disabled={!canSubmit}
-              loading={submitting}
-              style={{ marginTop: spacing.sm }}
-            />
-
-            <Pressable onPress={() => router.push("/register")} hitSlop={8} style={styles.registerLink}>
-              <Text style={styles.registerLinkText}>Hesabın yok mu? Kayıt ol</Text>
-            </Pressable>
+              <Pressable onPress={() => router.push("/register")} hitSlop={8} style={styles.registerLink}>
+                <Text style={styles.registerLinkText}>Hesabın yok mu? Kayıt ol</Text>
+              </Pressable>
+            </AnimatedFadeIn>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -188,15 +185,6 @@ const styles = StyleSheet.create({
   header: {
     alignItems: "center",
     gap: spacing.sm,
-  },
-  logoCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: radius.full,
-    backgroundColor: colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: spacing.xs,
   },
   title: {
     ...typography.headlineLg,
@@ -252,44 +240,6 @@ const styles = StyleSheet.create({
   },
   quickLoginForget: {
     padding: spacing.xs,
-  },
-  inputGroup: {
-    gap: spacing.xs,
-  },
-  inputLabel: {
-    ...typography.labelLg,
-    color: colors.onSurfaceVariant,
-    textTransform: "none",
-    letterSpacing: 0,
-  },
-  inputWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    backgroundColor: colors.surfaceContainerLowest,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
-    height: 56,
-  },
-  input: {
-    flex: 1,
-    ...typography.bodyLg,
-    color: colors.onSurface,
-  },
-  errorBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    backgroundColor: colors.errorContainer,
-    padding: spacing.sm,
-    borderRadius: radius.sm,
-  },
-  errorText: {
-    ...typography.bodyMd,
-    color: colors.onErrorContainer,
-    flexShrink: 1,
   },
   forgotLink: {
     alignItems: "flex-end",

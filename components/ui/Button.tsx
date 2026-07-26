@@ -1,4 +1,5 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { useRef } from "react";
+import { ActivityIndicator, Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import type { StyleProp, ViewStyle } from "react-native";
 
 import { colors, radius, shadows, spacing, typography } from "@/constants/theme";
@@ -23,30 +24,42 @@ export function Button({
   style,
 }: ButtonProps) {
   const isDisabled = disabled || loading;
+  const press = useRef(new Animated.Value(0)).current;
+
+  function animateTo(toValue: number) {
+    Animated.spring(press, { toValue, speed: 40, bounciness: 10, useNativeDriver: true }).start();
+  }
+
+  const scale = press.interpolate({ inputRange: [0, 1], outputRange: [1, 0.95] });
 
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ disabled: isDisabled }}
       onPress={onPress}
+      onPressIn={() => !isDisabled && animateTo(1)}
+      onPressOut={() => animateTo(0)}
       disabled={isDisabled}
-      style={({ pressed }) => [
-        styles.base,
-        variant !== "outline" && !isDisabled && styles.elevated,
-        variantStyles[variant],
-        isDisabled && styles.disabled,
-        pressed && !isDisabled && styles.pressed,
-        style,
-      ]}
     >
-      {loading ? (
-        <ActivityIndicator color={variant === "outline" ? colors.primary : "#ffffff"} />
-      ) : (
-        <View style={styles.content}>
-          {icon}
-          <Text style={[styles.label, variant === "outline" && styles.labelOutline]}>{label}</Text>
-        </View>
-      )}
+      <Animated.View
+        style={[
+          styles.base,
+          variant !== "outline" && !isDisabled && styles.elevated,
+          variantStyles[variant],
+          isDisabled && styles.disabled,
+          { transform: [{ scale }] },
+          style,
+        ]}
+      >
+        {loading ? (
+          <ActivityIndicator color={variant === "outline" ? colors.primary : "#ffffff"} />
+        ) : (
+          <View style={styles.content}>
+            {icon}
+            <Text style={[styles.label, variant === "outline" && styles.labelOutline]}>{label}</Text>
+          </View>
+        )}
+      </Animated.View>
     </Pressable>
   );
 }
@@ -73,10 +86,6 @@ const styles = StyleSheet.create({
   },
   labelOutline: {
     color: colors.primary,
-  },
-  pressed: {
-    opacity: 0.9,
-    transform: [{ scale: 0.99 }],
   },
   disabled: {
     opacity: 0.5,
