@@ -8,8 +8,20 @@ const VAPID_PUBLIC_KEY = process.env.EXPO_PUBLIC_VAPID_PUBLIC_KEY;
 export type WebPushStatus = "unsupported" | "unknown" | "default" | "denied" | "granted";
 
 function urlBase64ToUint8Array(base64Url: string): Uint8Array {
-  const padding = "=".repeat((4 - (base64Url.length % 4)) % 4);
-  const base64 = (base64Url + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const trimmed = base64Url.trim();
+  // Geçerli bir base64url dizisinin uzunluğu 4'e bölündüğünde 1 kalanı
+  // veremez (bu durumda 3 dolgu karakteri gerekir, ki bu asla geçerli
+  // değildir) — ör. .env.example'daki "YOUR-VAPID-PUBLIC-KEY" placeholder'ı
+  // bu şekli alır ve atob() anlaşılmaz bir InvalidCharacterError fırlatırdı.
+  if (!/^[A-Za-z0-9_-]+$/.test(trimmed) || trimmed.length % 4 === 1) {
+    throw new Error(
+      `EXPO_PUBLIC_VAPID_PUBLIC_KEY geçerli bir VAPID public key değil (alınan değer: "${trimmed}"). ` +
+        "web-push ile üretilmiş gerçek bir anahtar çifti kullandığından emin ol."
+    );
+  }
+
+  const padding = "=".repeat((4 - (trimmed.length % 4)) % 4);
+  const base64 = (trimmed + padding).replace(/-/g, "+").replace(/_/g, "/");
   const rawData = atob(base64);
   return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
 }
