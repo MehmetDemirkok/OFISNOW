@@ -16,6 +16,7 @@ import { updateMyPushToken } from "@/lib/api/profiles";
 // BİREBİR aynı olmalı; biri değişirse diğeri de güncellenmeli.
 const NEW_ORDER_CHANNEL_ID = "orders-new-v2";
 const ORDER_CANCELLED_CHANNEL_ID = "orders-cancelled-v2";
+const ORDER_PENDING_CHANNEL_ID = "orders-pending-v2";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -46,6 +47,18 @@ async function ensureAndroidChannel() {
     sound: "order_cancelled.wav",
     vibrationPattern: [0, 300, 100, 300],
     lightColor: "#ba1a1a",
+    bypassDnd: false,
+    enableVibrate: true,
+  });
+
+  // Özel bir .wav asseti gerektirmesin diye sistemin varsayılan bildirim
+  // sesi kullanılır (sound: "default").
+  await Notifications.setNotificationChannelAsync(ORDER_PENDING_CHANNEL_ID, {
+    name: "Sipariş Hatırlatması",
+    importance: Notifications.AndroidImportance.HIGH,
+    sound: "default",
+    vibrationPattern: [0, 200, 100, 200],
+    lightColor: "#3E6350",
     bypassDnd: false,
     enableVibrate: true,
   });

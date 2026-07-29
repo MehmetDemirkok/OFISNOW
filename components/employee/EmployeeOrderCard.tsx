@@ -35,6 +35,7 @@ export function EmployeeOrderCard({
       : order.order_items.map((it) => `${it.quantity}x ${it.product_name}`).join(", ");
   const locationName = order.location?.name ?? order.custom_location ?? "Belirtilmedi";
   const statusStyle = statusColors[order.status];
+  const waiterName = order.status === "seen" ? order.seen_by_profile?.full_name : null;
 
   return (
     <Pressable
@@ -53,6 +54,12 @@ export function EmployeeOrderCard({
             <Text style={styles.metaDot}>•</Text>
             <Text style={styles.meta}>{formatTime(order.created_at)}</Text>
           </View>
+          {waiterName ? (
+            <View style={styles.metaRow}>
+              <MaterialIcons name="person" size={14} color={colors.secondary} />
+              <Text style={[styles.meta, styles.waiterText]}>İlgileniyor: {waiterName}</Text>
+            </View>
+          ) : null}
         </View>
         <View style={[styles.statusBadge, { backgroundColor: statusStyle.bg }]}>
           <MaterialIcons name={statusStyle.icon} size={14} color={statusStyle.fg} />
@@ -103,6 +110,10 @@ const styles = StyleSheet.create({
   },
   metaDot: {
     color: colors.onSurfaceVariant,
+  },
+  waiterText: {
+    color: colors.secondary,
+    fontWeight: "600",
   },
   statusBadge: {
     flexDirection: "row",

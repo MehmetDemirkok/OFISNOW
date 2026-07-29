@@ -30,6 +30,7 @@ için canlıya almak üzere aşağıdaki adımları izleyin.
 12. `20260724000002_notify_order_cancelled_webhook.sql` — sipariş iptalinde `notify-order-cancelled` Edge Function'ını tetikleyen `pg_net` webhook'u
 13. `20260726000001_feedback.sql` — `feedback` tablosu ve `send_feedback` RPC'si (Hesabım > Geri Bildirim ekranı)
 14. `20260726000002_feedback_webhook.sql` — yeni geri bildirimde `notify-feedback` Edge Function'ını tetikleyen `pg_net` webhook'u
+15. `20260729000001_notify_pending_order_reminder.sql` — bir sipariş 15 dakikadır "seen" durumunda kapatılmadıysa, `pg_cron` (her dakika) + `pg_net` ile `notify-order-pending` Edge Function'ını tetikleyip siparişi üstlenen garsona tek seferlik hatırlatma bildirimi gönderir
 
 Ardından örnek verileri yüklemek için `supabase/seed.sql` dosyasını çalıştırın
 (kategoriler, konumlar, örnek ürünler).
@@ -58,10 +59,16 @@ bir admin veya kullanıcı yönetimi ekranı yoktur.
 
 ```bash
 supabase functions deploy notify-new-order --project-ref <PROJECT_REF>
+supabase functions deploy notify-order-cancelled --project-ref <PROJECT_REF>
+supabase functions deploy notify-order-pending --project-ref <PROJECT_REF>
 ```
 
-Fonksiyon, `SUPABASE_URL` ve `SUPABASE_SERVICE_ROLE_KEY` ortam değişkenlerini
-Supabase tarafından otomatik olarak alır; ek bir ayar gerekmez.
+Fonksiyonlar, `SUPABASE_URL` ve `SUPABASE_SERVICE_ROLE_KEY` ortam
+değişkenlerini Supabase tarafından otomatik olarak alır; ek bir ayar
+gerekmez. `notify-order-pending`, bir Database Webhook'u değil,
+`20260729000001_notify_pending_order_reminder.sql` migration'ının kurduğu
+`pg_cron` görevi (`notify-pending-orders-every-minute`, her dakika) tarafından
+tetiklenir — 5. adımdaki gibi ayrı bir webhook bağlamanıza gerek yok.
 
 ## 5) Database Webhook'u bağlayın
 

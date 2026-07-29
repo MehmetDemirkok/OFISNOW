@@ -77,6 +77,17 @@ export default function EmployeeOrderDetailScreen() {
             <Text style={styles.statusText}>{employeeStatusLabels[order.status]}</Text>
           </View>
 
+          {order.status === "seen" && order.seen_by_profile ? (
+            <View style={styles.card}>
+              <View style={styles.metaRow}>
+                <MaterialIcons name="person" size={18} color={colors.secondary} />
+                <Text style={[styles.metaText, { color: colors.secondary, fontWeight: "700" }]}>
+                  İlgileniyor: {order.seen_by_profile.full_name}
+                </Text>
+              </View>
+            </View>
+          ) : null}
+
           {order.order_type === "pickup" ? (
             <View style={styles.card}>
               <View style={styles.metaRow}>
