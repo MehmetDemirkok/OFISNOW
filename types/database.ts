@@ -81,6 +81,7 @@ export interface Order {
   note: string | null;
   seen_by: string | null;
   seen_at: string | null;
+  reminder_sent_at: string | null;
   completed_at: string | null;
   created_at: string;
   updated_at: string;
