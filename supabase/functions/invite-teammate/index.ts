@@ -95,7 +95,12 @@ Deno.serve(async (req: Request) => {
 
   if (rpcError || !token) {
     console.error("invite-teammate: create_team_invitation hatası", rpcError);
-    return jsonResponse({ error: "INVITATION_FAILED" }, 500);
+    // create_team_invitation() RAISE EXCEPTION ile fırlattığı mesajı olduğu gibi
+    // error.message'a koyar; bilinen kodları istemciye taşıyoruz, bilmediklerimizi
+    // genel bir 500'e düşürüyoruz.
+    const KNOWN_CODES = ["FORBIDDEN", "INVALID_EMAIL", "ALREADY_MEMBER"];
+    const knownCode = KNOWN_CODES.find((code) => rpcError?.message?.includes(code));
+    return jsonResponse({ error: knownCode ?? "INVITATION_FAILED" }, knownCode ? 400 : 500);
   }
 
   const { data: company } = await supabase.from("companies").select("name").eq("id", profile.company_id).single();

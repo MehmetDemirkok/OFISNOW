@@ -65,6 +65,18 @@ export default function RegisterScreen() {
     }).start();
   }, [mode, modeAnim]);
 
+  // E-postadaki davet linki web'e açılır (uygulama yüklü olmayanlar için tek
+  // güvenli hedef budur). Web'de bu sayfa yüklenir yüklenmez, aynı daveti
+  // taşıyan özel şema linkiyle uygulamayı da açmayı dener; uygulama kuruluysa
+  // işletim sistemi devralır, kurulu değilse hiçbir şey olmaz ve kullanıcı
+  // zaten bu sayfada (web'deki kayıt formunda) kalmaya devam eder.
+  useEffect(() => {
+    if (Platform.OS !== "web" || typeof window === "undefined" || !invitedCode) return;
+    const query = new URLSearchParams({ invite: invitedCode, role: invitedRole }).toString();
+    window.location.href = `ofisnow://register?${query}`;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const baseValid =
     fullName.trim().length > 1 && email.trim().length > 3 && password.length >= 6 && !submitting;
   const needsLocation = mode === "join" && joinRole === "employee";

@@ -50,6 +50,10 @@ begin
     raise exception 'INVALID_EMAIL' using errcode = 'P0001';
   end if;
 
+  if exists (select 1 from public.profiles where lower(email) = v_email) then
+    raise exception 'ALREADY_MEMBER' using errcode = 'P0001';
+  end if;
+
   -- gen_random_bytes() pgcrypto'nun "extensions" şemasında yaşar ve bu
   -- fonksiyonun search_path'i yalnızca "public"; bunun yerine bu dosyadaki
   -- diğer fonksiyonlarda da kullanılan gen_random_uuid() (çekirdek Postgres)

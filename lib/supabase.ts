@@ -83,6 +83,9 @@ export function toFriendlyErrorMessage(error: unknown): string {
   if (message.includes("CANNOT_INVITE_SELF")) {
     return "Kendi e-posta adresine davet gönderemezsin.";
   }
+  if (message.includes("ALREADY_MEMBER")) {
+    return "Bu e-posta adresiyle zaten bir hesap var, davete gerek yok.";
+  }
   if (message.includes("INVITE_EMAIL_MISMATCH")) {
     return "Bu davet kodu farklı bir e-posta adresine gönderilmiş. Kayıt olurken davet edildiğin e-postayı kullan.";
   }
