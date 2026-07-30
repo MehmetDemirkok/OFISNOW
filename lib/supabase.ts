@@ -80,6 +80,18 @@ export function toFriendlyErrorMessage(error: unknown): string {
   if (message.includes("Password should be at least")) {
     return "Şifre en az 6 karakter olmalı.";
   }
+  if (message.includes("CANNOT_INVITE_SELF")) {
+    return "Kendi e-posta adresine davet gönderemezsin.";
+  }
+  if (message.includes("INVITE_EMAIL_MISMATCH")) {
+    return "Bu davet kodu farklı bir e-posta adresine gönderilmiş. Kayıt olurken davet edildiğin e-postayı kullan.";
+  }
+  if (message.includes("INVALID_EMAIL")) {
+    return "Geçerli bir e-posta adresi gir.";
+  }
+  if (message.includes("EMAIL_SEND_FAILED") || message.includes("INVITATION_FAILED")) {
+    return "Davet e-postası gönderilemedi. Lütfen tekrar deneyin.";
+  }
 
   const code = error && typeof error === "object" && "code" in error ? String((error as { code?: unknown }).code) : "";
   if (code === "23503" || message.includes("foreign key constraint") || message.includes("violates foreign key")) {
