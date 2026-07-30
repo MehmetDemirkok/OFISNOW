@@ -50,7 +50,11 @@ begin
     raise exception 'INVALID_EMAIL' using errcode = 'P0001';
   end if;
 
-  v_token := upper(encode(gen_random_bytes(24), 'hex'));
+  -- gen_random_bytes() pgcrypto'nun "extensions" şemasında yaşar ve bu
+  -- fonksiyonun search_path'i yalnızca "public"; bunun yerine bu dosyadaki
+  -- diğer fonksiyonlarda da kullanılan gen_random_uuid() (çekirdek Postgres)
+  -- ile yeterince rastgele, uzun bir token üretiyoruz.
+  v_token := upper(replace(gen_random_uuid()::text, '-', '') || replace(gen_random_uuid()::text, '-', ''));
 
   insert into public.team_invitations (company_id, invited_by, email, role, token)
   values (public.current_company_id(), auth.uid(), v_email, p_role, v_token);
