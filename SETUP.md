@@ -278,6 +278,33 @@ Function'ını çağırarak Resend üzerinden e-postaya çevirir (adım 9'daki
 > doğrulanana kadar `FEEDBACK_NOTIFY_EMAIL`'i Resend hesabına kayıtlı
 > e-postadan farklı bir adrese ayarlamayın.
 
+## 11) E-posta ile Ekip Daveti
+
+Hesabım > Arkadaşını Davet Et ekranından girilen e-posta adresine,
+`invite-teammate` Edge Function'ı `create_team_invitation()` fonksiyonuyla
+üretilen 7 gün geçerli, tek kullanımlık bir davet kodu içeren e-posta
+gönderir (adım 9'daki `RESEND_API_KEY` / `RESEND_FROM_EMAIL` secret'larını
+kullanır). Yalnızca `employee` rolündeki kullanıcılar davet gönderebilir.
+
+1. **Edge Function'ı deploy edin**:
+
+   ```bash
+   supabase functions deploy invite-teammate --project-ref fsksmdubigkzlsdmrebt
+   ```
+
+2. **(Opsiyonel) Tek tıkla kayıt linki**: `SITE_URL` secret'ı ayarlanırsa
+   e-postadaki buton, davet kodunu ve rolü önceden dolduran bir bağlantıya
+   (`<SITE_URL>/register?invite=...&role=...`) gider. Ayarlanmazsa e-posta
+   yalnızca kodu gösterir ve alıcı "Davet Koduyla Katıl" ekranına elle girer.
+
+   ```bash
+   supabase secrets set SITE_URL=https://ofisnow.app --project-ref fsksmdubigkzlsdmrebt
+   ```
+
+> Adım 9'daki geçici Resend kısıtlaması burada da geçerlidir; domain
+> doğrulanana kadar davetleri yalnızca Resend hesabına kayıtlı e-postaya
+> gönderebilirsiniz.
+
 ## Notlar
 
 - `assets/sounds/new-order.wav` örnek/placeholder bir bildirim sesidir;

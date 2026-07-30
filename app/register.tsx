@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { Redirect, router } from "expo-router";
+import { Redirect, router, useLocalSearchParams } from "expo-router";
 
 import { AnimatedErrorBanner } from "@/components/ui/AnimatedErrorBanner";
 import { AnimatedFadeIn } from "@/components/ui/AnimatedFadeIn";
@@ -35,7 +35,13 @@ const PILL_GAP = 4;
 
 export default function RegisterScreen() {
   const { session, signUp } = useAuth();
-  const [mode, setMode] = useState<Mode>("create");
+  // E-posta ile gönderilen davet bağlantısı ?invite=TOKEN&role=employee|waiter
+  // ile açılır; bu durumda "Davet Koduyla Katıl" sekmesi ve alanları önceden doldurulur.
+  const params = useLocalSearchParams<{ invite?: string; role?: string }>();
+  const invitedCode = typeof params.invite === "string" ? params.invite : "";
+  const invitedRole: JoinRole = params.role === "waiter" ? "waiter" : "employee";
+
+  const [mode, setMode] = useState<Mode>(invitedCode ? "join" : "create");
   const [switchWidth, setSwitchWidth] = useState(0);
   const modeAnim = useRef(new Animated.Value(0)).current;
 
@@ -43,8 +49,8 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [companyName, setCompanyName] = useState("");
-  const [inviteCode, setInviteCode] = useState("");
-  const [joinRole, setJoinRole] = useState<JoinRole>("employee");
+  const [inviteCode, setInviteCode] = useState(invitedCode);
+  const [joinRole, setJoinRole] = useState<JoinRole>(invitedRole);
   const [locationDescription, setLocationDescription] = useState("");
 
   const [error, setError] = useState<string | null>(null);
@@ -58,6 +64,18 @@ export default function RegisterScreen() {
       useNativeDriver: false,
     }).start();
   }, [mode, modeAnim]);
+
+  // E-postadaki davet linki web'e açılır (uygulama yüklü olmayanlar için tek
+  // güvenli hedef budur). Web'de bu sayfa yüklenir yüklenmez, aynı daveti
+  // taşıyan özel şema linkiyle uygulamayı da açmayı dener; uygulama kuruluysa
+  // işletim sistemi devralır, kurulu değilse hiçbir şey olmaz ve kullanıcı
+  // zaten bu sayfada (web'deki kayıt formunda) kalmaya devam eder.
+  useEffect(() => {
+    if (Platform.OS !== "web" || typeof window === "undefined" || !invitedCode) return;
+    const query = new URLSearchParams({ invite: invitedCode, role: invitedRole }).toString();
+    window.location.href = `ofisnow://register?${query}`;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const baseValid =
     fullName.trim().length > 1 && email.trim().length > 3 && password.length >= 6 && !submitting;
