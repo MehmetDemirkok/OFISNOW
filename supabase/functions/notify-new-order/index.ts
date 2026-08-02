@@ -128,12 +128,9 @@ Deno.serve(async (req: Request) => {
       sendApnsPushToWaiters(supabase, apnsWaiters, () => ({
         title,
         body,
-        // Boş toplama ricası, yeni sipariş sesiyle karışmasın diye iPhone'un
-        // klasik varsayılan bildirim tonunu kullanır (bkz.
-        // ikram-x-ios/IkramX/Core/WaiterOrderSound.swift). Gerçek yeni sipariş
-        // / garson çağrısı ise özel, çarpıcı sesi kullanır (bkz.
-        // ikram-x-ios/IkramX/Resources/Sounds/new_order.caf).
-        sound: isPickup ? "default" : "new_order.caf",
+        // Her bildirim türünün kendine ait, net şekilde ayrışan özel sesi var
+        // (bkz. ikram-x-ios/IkramX/Resources/Sounds/).
+        sound: isPickup ? "pickup_request.caf" : "new_order.caf",
         data: { orderId: order.id, type: notificationType },
       })),
       sendWebPush(supabase, webWaiters, { title, body, orderId: order.id }),
