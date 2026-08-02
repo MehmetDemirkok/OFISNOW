@@ -41,6 +41,7 @@ function RootNavigator() {
         <Stack.Screen name="profile" />
         <Stack.Screen name="hesap-ayarlari" />
         <Stack.Screen name="yardim-destek" />
+        <Stack.Screen name="gizlilik-politikasi" />
         <Stack.Screen name="geri-bildirim" />
         <Stack.Screen name="raporlarim" />
         <Stack.Screen name="(employee)" />
