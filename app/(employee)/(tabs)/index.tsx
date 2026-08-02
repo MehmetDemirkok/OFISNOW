@@ -14,6 +14,7 @@ import { useAuth } from "@/context/AuthContext";
 import { fetchCategories } from "@/lib/api/catalog";
 import { callWaiter, fetchMyActiveOrders, fetchMyOrderHistory, requestPickup } from "@/lib/api/orders";
 import { useAsyncData } from "@/hooks/useAsyncData";
+import { useIsWideWeb } from "@/hooks/useIsWideWeb";
 import { useOrdersRealtime } from "@/hooks/useOrdersRealtime";
 import { showAlert } from "@/lib/alert";
 import { toFriendlyErrorMessage } from "@/lib/supabase";
@@ -22,6 +23,7 @@ import { colors, radius, shadows, spacing, typography } from "@/constants/theme"
 export default function EmployeeHomeScreen() {
   const { profile } = useAuth();
   const insets = useSafeAreaInsets();
+  const isWideWeb = useIsWideWeb();
   const [calling, setCalling] = useState(false);
   const [requestingPickup, setRequestingPickup] = useState(false);
 
@@ -155,6 +157,7 @@ export default function EmployeeHomeScreen() {
                 key={category.id}
                 name={category.name}
                 index={idx}
+                style={isWideWeb ? styles.categoryCardWide : undefined}
                 onPress={() => router.push(`/(employee)/kategori/${category.id}?name=${encodeURIComponent(category.name)}`)}
               />
             ))}
@@ -269,6 +272,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.md,
+  },
+  categoryCardWide: {
+    flexBasis: "23%",
   },
   section: {
     gap: spacing.sm,

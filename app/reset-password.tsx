@@ -15,12 +15,14 @@ import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { Button } from "@/components/ui/Button";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useAuth } from "@/context/AuthContext";
+import { useIsWideWeb } from "@/hooks/useIsWideWeb";
 import { showAlert } from "@/lib/alert";
-import { colors, radius, spacing, typography } from "@/constants/theme";
+import { colors, radius, spacing, typography, webShell } from "@/constants/theme";
 
 export default function ResetPasswordScreen() {
   const { session, confirmPasswordReset, requestPasswordReset } = useAuth();
   const params = useLocalSearchParams<{ email?: string }>();
+  const isWideWeb = useIsWideWeb();
 
   const [email, setEmail] = useState(params.email ?? "");
   const [code, setCode] = useState("");
@@ -74,7 +76,10 @@ export default function ResetPasswordScreen() {
   return (
     <ScreenContainer>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          contentContainerStyle={[styles.scrollContent, isWideWeb && styles.scrollContentWide]}
+          keyboardShouldPersistTaps="handled"
+        >
           <Pressable onPress={() => router.back()} hitSlop={8} style={styles.backButton}>
             <MaterialIcons name="arrow-back" size={22} color={colors.onSurfaceVariant} />
           </Pressable>
@@ -202,6 +207,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: spacing.lg,
     gap: spacing.xl,
+  },
+  scrollContentWide: {
+    width: "100%",
+    maxWidth: webShell.maxWidth,
+    alignSelf: "center",
   },
   backButton: {
     position: "absolute",

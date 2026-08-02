@@ -22,7 +22,6 @@ import { showAlert } from "@/lib/alert";
 import { getInitials } from "@/lib/initials";
 import { toFriendlyErrorMessage } from "@/lib/supabase";
 import { colors, radius, roleLabels, spacing, typography, webShell } from "@/constants/theme";
-import { PwaInstallRow } from "@/components/ui/PwaInstallRow";
 import { WebPushEnableRow } from "@/components/ui/WebPushEnableRow";
 
 const INVITE_CODE_REFRESH_MS = 10 * 60 * 1000;
@@ -120,8 +119,8 @@ export function AccountCorner() {
       <Modal visible={open} transparent animationType="fade" onRequestClose={closeSheet}>
         <Pressable style={styles.backdrop} onPress={closeSheet}>
           {/* Modal (RN Web'de) tüm tarayıcı penceresine portallanır; masaüstünde
-              WebShell'in telefon genişliğindeki kabuğuyla hizalı kalması için
-              içerik burada aynı genişliğe ortalanır. */}
+              WebShell'in içerik çerçevesiyle hizalı kalması için içerik burada
+              aynı genişliğe ortalanır. */}
           <View style={styles.backdropInner} pointerEvents="box-none">
           <Pressable style={[styles.sheet, { marginTop: insets.top + 64 }]} onPress={(e) => e.stopPropagation()}>
             {confirming ? (
@@ -180,7 +179,6 @@ export function AccountCorner() {
                   <Text style={styles.editProfileText}>Profili Düzenle</Text>
                 </Pressable>
 
-                <PwaInstallRow />
                 <WebPushEnableRow />
 
                 {isEmployee && inviteCode ? (
@@ -298,7 +296,7 @@ const styles = StyleSheet.create({
   backdropInner: {
     flex: 1,
     width: "100%",
-    maxWidth: webShell.maxWidth,
+    maxWidth: webShell.contentMaxWidth,
     alignItems: "flex-end",
   },
   sheet: {

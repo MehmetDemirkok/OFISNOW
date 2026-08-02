@@ -1,5 +1,6 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import type { StyleProp, ViewStyle } from "react-native";
 
 import { categoryColor, categoryIcon } from "@/constants/categoryIcons";
 import { colors, radius, shadows, spacing, typography } from "@/constants/theme";
@@ -8,17 +9,19 @@ export function CategoryCard({
   name,
   index = 0,
   onPress,
+  style,
 }: {
   name: string;
   index?: number;
   onPress: () => void;
+  style?: StyleProp<ViewStyle>;
 }) {
   const { bg, fg } = categoryColor(index);
 
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.card, style, pressed && styles.pressed]}
     >
       <View style={[styles.iconCircle, { backgroundColor: bg }]}>
         <MaterialIcons name={categoryIcon(name)} size={26} color={fg} />

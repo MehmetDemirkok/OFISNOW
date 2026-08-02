@@ -2,10 +2,18 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 
 import { tabBarScreenOptions } from "@/constants/theme";
+import { useIsWideWeb } from "@/hooks/useIsWideWeb";
 
 export default function WaiterTabsLayout() {
+  // Geniş webde navigasyonu üst seviyedeki WebSidebarNav sağlıyor; alt sekme
+  // çubuğu tekrar görünmesin diye gizlenir.
+  const isWideWeb = useIsWideWeb();
+  const screenOptions = isWideWeb
+    ? { ...tabBarScreenOptions, tabBarStyle: { display: "none" as const } }
+    : tabBarScreenOptions;
+
   return (
-    <Tabs screenOptions={tabBarScreenOptions}>
+    <Tabs screenOptions={screenOptions}>
       <Tabs.Screen
         name="index"
         options={{

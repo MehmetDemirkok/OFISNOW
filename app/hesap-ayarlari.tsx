@@ -13,7 +13,6 @@ import {
 } from "react-native";
 
 import { Button } from "@/components/ui/Button";
-import { PwaInstallRow } from "@/components/ui/PwaInstallRow";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { WebPushEnableRow } from "@/components/ui/WebPushEnableRow";
 import { useAuth } from "@/context/AuthContext";
@@ -131,7 +130,6 @@ export default function AccountSettingsScreen() {
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Bildirimler ve Kurulum</Text>
-            <PwaInstallRow />
             <WebPushEnableRow />
           </View>
         </ScrollView>

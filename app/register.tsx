@@ -19,8 +19,9 @@ import { AnimatedTextField } from "@/components/ui/AnimatedTextField";
 import { Button } from "@/components/ui/Button";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useAuth } from "@/context/AuthContext";
+import { useIsWideWeb } from "@/hooks/useIsWideWeb";
 import { showAlert } from "@/lib/alert";
-import { colors, radius, spacing, typography } from "@/constants/theme";
+import { colors, radius, spacing, typography, webShell } from "@/constants/theme";
 
 type Mode = "create" | "join";
 type JoinRole = "employee" | "waiter";
@@ -35,6 +36,7 @@ const PILL_GAP = 4;
 
 export default function RegisterScreen() {
   const { session, signUp } = useAuth();
+  const isWideWeb = useIsWideWeb();
   // E-posta ile gönderilen davet bağlantısı ?invite=TOKEN&role=employee|waiter
   // ile açılır; bu durumda "Davet Koduyla Katıl" sekmesi ve alanları önceden doldurulur.
   const params = useLocalSearchParams<{ invite?: string; role?: string }>();
@@ -128,7 +130,10 @@ export default function RegisterScreen() {
   return (
     <ScreenContainer background="vivid">
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          contentContainerStyle={[styles.scrollContent, isWideWeb && styles.scrollContentWide]}
+          keyboardShouldPersistTaps="handled"
+        >
           <AnimatedFadeIn offsetY={12}>
             <View style={styles.header}>
               <AnimatedLogo icon="person-add" size={64} />
@@ -328,6 +333,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: spacing.lg,
     gap: spacing.lg,
+  },
+  scrollContentWide: {
+    width: "100%",
+    maxWidth: webShell.maxWidth,
+    alignSelf: "center",
   },
   header: {
     alignItems: "center",

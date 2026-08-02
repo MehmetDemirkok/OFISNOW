@@ -51,6 +51,10 @@ export const colors = {
 export const webShell = {
   breakpoint: 720,
   maxWidth: 480,
+  /** Geniş masaüstü web'de uygulama çerçevesinin (sidebar + içerik) toplam genişliği. */
+  contentMaxWidth: 1120,
+  /** Geniş masaüstü web'de sol navigasyon menüsünün genişliği. */
+  sidebarWidth: 232,
 } as const;
 
 export const spacing = {

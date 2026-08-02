@@ -20,12 +20,14 @@ import { AnimatedTextField } from "@/components/ui/AnimatedTextField";
 import { Button } from "@/components/ui/Button";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useAuth } from "@/context/AuthContext";
+import { useIsWideWeb } from "@/hooks/useIsWideWeb";
 import { clearLastAccount, getLastAccount, type LastAccount } from "@/lib/lastAccount";
 import { getInitials } from "@/lib/initials";
-import { colors, radius, shadows, spacing, typography } from "@/constants/theme";
+import { colors, radius, shadows, spacing, typography, webShell } from "@/constants/theme";
 
 export default function LoginScreen() {
   const { session, signIn } = useAuth();
+  const isWideWeb = useIsWideWeb();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -73,7 +75,7 @@ export default function LoginScreen() {
         style={{ flex: 1 }}
       >
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, isWideWeb && styles.scrollContentWide]}
           keyboardShouldPersistTaps="handled"
         >
           <AnimatedFadeIn offsetY={12}>
@@ -181,6 +183,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: spacing.lg,
     gap: spacing.xl,
+  },
+  scrollContentWide: {
+    width: "100%",
+    maxWidth: webShell.maxWidth,
+    alignSelf: "center",
   },
   header: {
     alignItems: "center",

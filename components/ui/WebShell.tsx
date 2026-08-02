@@ -1,22 +1,20 @@
 import type { ReactNode } from "react";
-import { Platform, View, useWindowDimensions } from "react-native";
+import { Platform, View } from "react-native";
 
 import { colors, webShell } from "@/constants/theme";
+import { useIsWideWeb } from "@/hooks/useIsWideWeb";
 
-const DESKTOP_BREAKPOINT = webShell.breakpoint;
-const SHELL_MAX_WIDTH = webShell.maxWidth;
+const SHELL_MAX_WIDTH = webShell.contentMaxWidth;
 
 /**
- * Masaüstü tarayıcılarda mobil tasarımı bozmadan içeriği ortalanmış, telefon
- * genişliğinde bir "uygulama kabuğu" içinde gösterir (WhatsApp Web mantığı).
- * Native'de ve dar (mobil) web görünümlerde no-op'tur; tüm ekranlar,
- * kartlar ve alt sekme çubuğu böylece otomatik olarak orijinal mobil
- * ölçülerine döner, ekranlara tek tek dokunmaya gerek kalmaz.
+ * Geniş masaüstü tarayıcılarda içeriği normal bir web sayfası gibi, geniş bir
+ * sütuna ortalanmış olarak gösterir. Native'de ve dar (mobil) web
+ * görünümlerde no-op'tur; tüm ekranlar orijinal mobil ölçülerine döner.
  */
 export function WebShell({ children }: { children: ReactNode }) {
-  const { width } = useWindowDimensions();
+  const isWideWeb = useIsWideWeb();
 
-  if (Platform.OS !== "web" || width < DESKTOP_BREAKPOINT) {
+  if (Platform.OS !== "web" || !isWideWeb) {
     return <View style={{ flex: 1 }}>{children}</View>;
   }
 
@@ -28,10 +26,7 @@ export function WebShell({ children }: { children: ReactNode }) {
           flex: 1,
           width: "100%",
           maxWidth: SHELL_MAX_WIDTH,
-          overflow: "hidden",
           backgroundColor: colors.background,
-          // @ts-expect-error web-only CSS, react-native-web geçirir
-          boxShadow: "0 0 48px rgba(27,27,35,0.16)",
         }}
       >
         {children}

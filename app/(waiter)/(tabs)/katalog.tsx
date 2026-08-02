@@ -19,6 +19,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { LoadingView } from "@/components/ui/LoadingView";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useAsyncData } from "@/hooks/useAsyncData";
+import { useIsWideWeb } from "@/hooks/useIsWideWeb";
 import { useAuth } from "@/context/AuthContext";
 import {
   createCategory,
@@ -78,6 +79,7 @@ const PRODUCT_MODAL_DEFAULT: ProductModalState = {
 
 export default function CatalogScreen() {
   const { profile } = useAuth();
+  const isWideWeb = useIsWideWeb();
   const {
     data: categories,
     loading: categoriesLoading,
@@ -350,6 +352,7 @@ export default function CatalogScreen() {
 
   return (
     <ScreenContainer>
+      <View style={[{ flex: 1 }, isWideWeb && styles.wideWrap]}>
       <View style={styles.header}>
         <Text style={styles.title}>Katalog</Text>
       </View>
@@ -492,6 +495,7 @@ export default function CatalogScreen() {
           }}
         />
       )}
+      </View>
 
       <Modal visible={categoryModal.visible} transparent animationType="fade" onRequestClose={closeCategoryModal}>
         <View style={styles.modalBackdrop}>
@@ -678,6 +682,11 @@ export default function CatalogScreen() {
 }
 
 const styles = StyleSheet.create({
+  wideWrap: {
+    width: "100%",
+    maxWidth: 760,
+    alignSelf: "center",
+  },
   header: {
     paddingHorizontal: spacing.md,
     paddingTop: spacing.sm,
