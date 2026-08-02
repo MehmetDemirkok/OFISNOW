@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { MaterialIcons } from "@expo/vector-icons";
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
@@ -15,6 +15,7 @@ import {
   fetchNewOrders,
   fetchSeenOrders,
 } from "@/lib/api/orders";
+import { downloadOrdersCsv } from "@/lib/csvExport";
 import { safeGoBack } from "@/lib/navigation";
 import { colors, radius, shadows, spacing, typography } from "@/constants/theme";
 import type { OrderWithDetails } from "@/types/database";
@@ -31,6 +32,7 @@ const PERIOD_OPTIONS: { key: Period; label: string }[] = [
 const DAY_LABELS = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
 const TREND_DAYS = 7;
 const TREND_BAR_MAX_HEIGHT = 72;
+const HOUR_BAR_MAX_HEIGHT = 64;
 
 async function loadEmployeeOrders() {
   const [active, history] = await Promise.all([fetchMyActiveOrders(), fetchMyOrderHistory(150)]);
@@ -106,6 +108,15 @@ function buildWeeklyTrend(orders: OrderWithDetails[]) {
   return days;
 }
 
+function buildHourlyDistribution(orders: OrderWithDetails[]) {
+  const buckets = Array.from({ length: 24 }, (_, hour) => ({ hour, count: 0 }));
+  for (const order of orders) {
+    const hour = new Date(order.created_at).getHours();
+    buckets[hour]!.count += 1;
+  }
+  return buckets;
+}
+
 export default function ReportsScreen() {
   const { profile } = useAuth();
   const isWaiter = profile?.role === "waiter";
@@ -139,8 +150,22 @@ export default function ReportsScreen() {
   const weeklyTrend = useMemo(() => buildWeeklyTrend(allOrders), [allOrders]);
   const maxTrendCount = Math.max(1, ...weeklyTrend.map((d) => d.count));
 
+  const hourlyDistribution = useMemo(() => buildHourlyDistribution(allOrders), [allOrders]);
+  const maxHourlyCount = Math.max(1, ...hourlyDistribution.map((h) => h.count));
+  const peakHour = useMemo(
+    () => hourlyDistribution.reduce((best, cur) => (cur.count > best.count ? cur : best), hourlyDistribution[0]!),
+    [hourlyDistribution]
+  );
+  const [activeHour, setActiveHour] = useState<number | null>(null);
+  const displayedHour = activeHour !== null ? hourlyDistribution[activeHour]! : peakHour.count > 0 ? peakHour : null;
+
   if (!profile) return null;
   const fallbackHref = profile.role === "waiter" ? "/(waiter)" : "/(employee)";
+
+  function handleExportCsv() {
+    const periodLabel = PERIOD_OPTIONS.find((o) => o.key === period)?.label ?? period;
+    downloadOrdersCsv(`raporlarim-${periodLabel}-${new Date().toISOString().slice(0, 10)}.csv`, filteredOrders);
+  }
 
   return (
     <ScreenContainer>
@@ -149,7 +174,13 @@ export default function ReportsScreen() {
           <MaterialIcons name="arrow-back" size={22} color={colors.onSurface} />
         </Pressable>
         <Text style={styles.title}>Raporlarım</Text>
-        <View style={{ width: 40 }} />
+        {Platform.OS === "web" && filteredOrders.length > 0 ? (
+          <Pressable style={styles.backButton} onPress={handleExportCsv} hitSlop={12}>
+            <MaterialIcons name="download" size={20} color={colors.onSurface} />
+          </Pressable>
+        ) : (
+          <View style={{ width: 40 }} />
+        )}
       </View>
 
       {loading ? (
@@ -246,6 +277,43 @@ export default function ReportsScreen() {
 
           <View style={styles.section}>
             <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionTitle}>Yoğun Saatler</Text>
+              <Text style={styles.sectionSubtitle}>
+                {displayedHour
+                  ? `${String(displayedHour.hour).padStart(2, "0")}:00 · ${displayedHour.count} sipariş`
+                  : "Henüz veri yok"}
+              </Text>
+            </View>
+            <View style={styles.trendCard}>
+              <View style={styles.hourlyBars}>
+                {hourlyDistribution.map((bucket) => {
+                  const barHeight =
+                    bucket.count === 0 ? 3 : Math.max(4, (bucket.count / maxHourlyCount) * HOUR_BAR_MAX_HEIGHT);
+                  const isPeak = activeHour === null && bucket.hour === peakHour.hour && peakHour.count > 0;
+                  const isActive = activeHour === bucket.hour || isPeak;
+                  return (
+                    <Pressable
+                      key={bucket.hour}
+                      style={styles.hourlyBarColumn}
+                      onPress={() => setActiveHour((h) => (h === bucket.hour ? null : bucket.hour))}
+                      onHoverIn={() => setActiveHour(bucket.hour)}
+                      onHoverOut={() => setActiveHour(null)}
+                    >
+                      <View style={styles.hourlyBarTrack}>
+                        <View
+                          style={[styles.hourlyBarFill, { height: barHeight }, isActive && styles.hourlyBarFillActive]}
+                        />
+                      </View>
+                      <Text style={styles.hourlyBarLabel}>{bucket.hour % 3 === 0 ? bucket.hour : " "}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <View style={styles.sectionHeaderRow}>
               <Text style={styles.sectionTitle}>Ürün Özeti</Text>
               <Text style={styles.sectionSubtitle}>{completedCount} onaylı sipariş</Text>
             </View>
@@ -294,6 +362,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: spacing.md,
+    paddingRight: 64,
     paddingVertical: spacing.sm,
   },
   backButton: {
@@ -424,6 +493,33 @@ const styles = StyleSheet.create({
   trendBarLabelToday: {
     color: colors.primary,
     fontWeight: "700",
+  },
+  hourlyBars: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+  },
+  hourlyBarColumn: {
+    flex: 1,
+    alignItems: "center",
+    gap: 4,
+  },
+  hourlyBarTrack: {
+    width: 8,
+    height: HOUR_BAR_MAX_HEIGHT,
+    justifyContent: "flex-end",
+  },
+  hourlyBarFill: {
+    width: "100%",
+    borderRadius: radius.sm,
+    backgroundColor: colors.primaryFixed,
+  },
+  hourlyBarFillActive: {
+    backgroundColor: colors.primary,
+  },
+  hourlyBarLabel: {
+    ...typography.labelMd,
+    fontSize: 9,
+    color: colors.outline,
   },
   card: {
     backgroundColor: colors.surface,

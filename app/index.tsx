@@ -1,6 +1,8 @@
 import { Redirect } from "expo-router";
+import { Platform } from "react-native";
 
 import { LoadingView } from "@/components/ui/LoadingView";
+import { WelcomeScreen } from "@/components/marketing/WelcomeScreen";
 import { useAuth } from "@/context/AuthContext";
 
 export default function Index() {
@@ -8,7 +10,10 @@ export default function Index() {
 
   if (loading) return <LoadingView />;
 
-  if (!session) return <Redirect href="/login" />;
+  if (!session) {
+    if (Platform.OS === "web") return <WelcomeScreen />;
+    return <Redirect href="/login" />;
+  }
 
   if (!profile) return <LoadingView label="Profil yükleniyor..." />;
 
