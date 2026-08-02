@@ -70,6 +70,57 @@ gerekmez. `notify-order-pending`, bir Database Webhook'u değil,
 `pg_cron` görevi (`notify-pending-orders-every-minute`, her dakika) tarafından
 tetiklenir — 5. adımdaki gibi ayrı bir webhook bağlamanıza gerek yok.
 
+## 4b) İkram X native (iOS) için APNs kurulumu
+
+`ikram-x-ios` reposundaki native Swift istemcisi, Expo push token'ı değil,
+APNs'in verdiği ham cihaz token'ını kaydeder (`profiles.push_token`, hex
+formatında). `notify-new-order` / `notify-order-cancelled` /
+`notify-order-pending` fonksiyonları bu token'ları otomatik ayırt edip
+`supabase/functions/_shared/apns.ts` üzerinden doğrudan Apple'a (APNs HTTP/2
+API, JWT/ES256 imzalı) gönderir — aşağıdaki 4 secret tanımlanana kadar bu
+gönderimler sessizce atlanır (Expo/Web Push bundan etkilenmez).
+
+1. **APNs Auth Key oluşturun**: [Apple Developer](https://developer.apple.com/account) >
+   Certificates, Identifiers & Profiles > Keys > "+" > bir isim verin, **Apple
+   Push Notifications service (APNs)** kutusunu işaretleyin > Continue >
+   Register. İndirilen `AuthKey_XXXXXXXXXX.p8` dosyasını **güvenli saklayın**
+   (yalnızca bir kez indirilebilir) ve sayfada gösterilen **Key ID**'yi not
+   edin.
+2. **Team ID'yi not edin**: Apple Developer hesabı > Membership sayfasındaki
+   Team ID (İkram X için: `MZP94RV59F`, bkz. `ikram-x-ios/project.yml`).
+3. **Bundle ID**: `com.ikramx.app` (bkz. `ikram-x-ios/project.yml`).
+4. **Secret'ları kaydedin** (CLI kuruluysa):
+
+   ```bash
+   supabase secrets set \
+     APNS_KEY_ID=<key-id> \
+     APNS_TEAM_ID=MZP94RV59F \
+     APNS_BUNDLE_ID=com.ikramx.app \
+     APNS_AUTH_KEY="$(cat AuthKey_XXXXXXXXXX.p8)" \
+     --project-ref fsksmdubigkzlsdmrebt
+   ```
+
+   CLI yoksa: Supabase Dashboard > Project Settings > Edge Functions >
+   "Manage secrets" üzerinden aynı 4 değişkeni girin (`APNS_AUTH_KEY` için
+   `.p8` dosyasının tüm içeriğini, `-----BEGIN PRIVATE KEY-----` satırları
+   dahil, olduğu gibi yapıştırın).
+5. **Fonksiyonları yeniden deploy edin** (secret eklemek tek başına çalışan
+   fonksiyonları güncellemez):
+
+   ```bash
+   supabase functions deploy notify-new-order --project-ref fsksmdubigkzlsdmrebt
+   supabase functions deploy notify-order-cancelled --project-ref fsksmdubigkzlsdmrebt
+   supabase functions deploy notify-order-pending --project-ref fsksmdubigkzlsdmrebt
+   ```
+
+Bildirim sesleri: her iki uygulama da aynı özel, dikkat çekici sesleri
+kullanır — `assets/sounds/new_order.wav` / `order_cancelled.wav` bu depoda,
+`.caf` olarak dönüştürülmüş hali `ikram-x-ios/IkramX/Resources/Sounds/`
+içinde (aps payload'ındaki `sound.name` bu dosya adlarıyla birebir eşleşir).
+Sesi değiştirmek isterseniz her iki dosyayı da (wav ve caf) güncelleyip
+`afconvert -f caff -d ima4 <dosya>.wav <dosya>.caf` ile yeniden dönüştürün ve
+ikram-x-ios projesini `xcodegen generate` ile yeniden oluşturun.
+
 ## 5) Database Webhook'u bağlayın
 
 Supabase Dashboard > Database > Webhooks > "Create a new hook":

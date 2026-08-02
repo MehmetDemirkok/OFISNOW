@@ -9,6 +9,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import webpush from "npm:web-push@3.6.7";
+import { isApnsDeviceToken, sendApnsPushToWaiters } from "../_shared/apns.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -92,15 +93,25 @@ Deno.serve(async (req: Request) => {
     const title = "🙏 Küçük bir hatırlatma";
     const body = `${locationName} için üstlendiğiniz sipariş 15 dakikadır açık görünüyor. Teslim ettiyseniz uygulamadan "Tamamlandı" diyerek kapatmayı unutmayın — emeğiniz için şimdiden teşekkürler!`;
 
-    const nativeWaiters = waiterProfile.push_token ? [waiterProfile] : [];
+    const isApnsToken = Boolean(waiterProfile.push_token) && isApnsDeviceToken(waiterProfile.push_token!);
+    const expoWaiters = waiterProfile.push_token && !isApnsToken ? [waiterProfile] : [];
+    const apnsWaiters = isApnsToken ? [waiterProfile as WaiterProfile & { push_token: string }] : [];
     const webWaiters = waiterProfile.web_push_subscription ? [waiterProfile] : [];
 
-    const [expoSent] = await Promise.all([
-      sendExpoPush(supabase, nativeWaiters, { title, body, orderId: order.id }),
+    const [expoSent, apnsSent] = await Promise.all([
+      sendExpoPush(supabase, expoWaiters, { title, body, orderId: order.id }),
+      sendApnsPushToWaiters(supabase, apnsWaiters, () => ({
+        title,
+        body,
+        // Özel bir .caf asseti gerektirmesin diye sistemin varsayılan
+        // bildirim sesi kullanılır (Expo tarafındaki "default" ile tutarlı).
+        sound: "default",
+        data: { orderId: order.id, type: "order_pending_reminder" },
+      })),
       sendWebPush(supabase, webWaiters, { title, body, orderId: order.id }),
     ]);
 
-    return jsonResponse({ ok: true, sent: expoSent + webWaiters.length }, 200);
+    return jsonResponse({ ok: true, sent: expoSent + apnsSent + webWaiters.length }, 200);
   } catch (err) {
     console.error("notify-order-pending: beklenmeyen hata", err);
     return jsonResponse({ error: "INTERNAL_ERROR" }, 500);

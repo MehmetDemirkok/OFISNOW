@@ -8,6 +8,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import webpush from "npm:web-push@3.6.7";
+import { isApnsDeviceToken, sendApnsPushToWaiters } from "../_shared/apns.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -86,15 +87,25 @@ Deno.serve(async (req: Request) => {
     const title = "❌ Sipariş İptal Edildi";
     const body = `${locationName} konumundaki sipariş iptal edildi`;
 
-    const nativeWaiters = activeWaiters.filter((w) => w.push_token);
+    const expoWaiters = activeWaiters.filter((w) => w.push_token && !isApnsDeviceToken(w.push_token));
+    const apnsWaiters = activeWaiters.filter(
+      (w): w is WaiterProfile & { push_token: string } => Boolean(w.push_token) && isApnsDeviceToken(w.push_token!)
+    );
     const webWaiters = activeWaiters.filter((w) => w.web_push_subscription);
 
-    const [expoSent] = await Promise.all([
-      sendExpoPush(supabase, nativeWaiters, { title, body, orderId: order.id }),
+    const [expoSent, apnsSent] = await Promise.all([
+      sendExpoPush(supabase, expoWaiters, { title, body, orderId: order.id }),
+      sendApnsPushToWaiters(supabase, apnsWaiters, () => ({
+        title,
+        body,
+        // bkz. ikram-x-ios/IkramX/Resources/Sounds/order_cancelled.caf
+        sound: "order_cancelled.caf",
+        data: { orderId: order.id, type: "order_cancelled" },
+      })),
       sendWebPush(supabase, webWaiters, { title, body, orderId: order.id }),
     ]);
 
-    return jsonResponse({ ok: true, sent: expoSent + webWaiters.length }, 200);
+    return jsonResponse({ ok: true, sent: expoSent + apnsSent + webWaiters.length }, 200);
   } catch (err) {
     console.error("notify-order-cancelled: beklenmeyen hata", err);
     return jsonResponse({ error: "INTERNAL_ERROR" }, 500);
