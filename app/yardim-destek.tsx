@@ -61,9 +61,7 @@ export default function HelpSupportScreen() {
   const { profile } = useAuth();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-  if (!profile) return null;
-
-  const fallbackHref = profile.role === "waiter" ? "/(waiter)" : "/(employee)";
+  const fallbackHref = profile?.role === "waiter" ? "/(waiter)" : "/(employee)";
   const appVersion = Constants.expoConfig?.version ?? "1.0.0";
 
   function handleContactPress() {
