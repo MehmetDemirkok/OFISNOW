@@ -2,7 +2,7 @@
 //
 // Hesabım ekranındaki "Arkadaşını Davet Et" formu bu fonksiyonu doğrudan
 // çağırır (webhook değil). İsteği gönderen kullanıcının JWT'si forward
-// edilerek RLS/current_role() ile aynı yetki kontrolü (yalnızca employee)
+// edilerek RLS/current_role() ile aynı yetki kontrolü (employee veya waiter)
 // sağlanır; token üretimi create_team_invitation() RPC'sine bırakılır,
 // burada yalnızca e-posta gönderimi yapılır.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
@@ -84,7 +84,7 @@ Deno.serve(async (req: Request) => {
   if (profileError || !profile) {
     return jsonResponse({ error: "PROFILE_NOT_FOUND" }, 404);
   }
-  if (profile.role !== "employee") {
+  if (profile.role !== "employee" && profile.role !== "waiter") {
     return jsonResponse({ error: "FORBIDDEN" }, 403);
   }
 
@@ -106,7 +106,7 @@ Deno.serve(async (req: Request) => {
   const { data: company } = await supabase.from("companies").select("name").eq("id", profile.company_id).single();
 
   const roleLabel = ROLE_LABELS[role] ?? role;
-  const companyName = company?.name ?? "OfisNow";
+  const companyName = company?.name ?? "İkram X";
   const inviterName = profile.full_name || "Bir ekip arkadaşın";
 
   const inviteLink = SITE_URL ? `${SITE_URL.replace(/\/$/, "")}/register?invite=${token}&role=${role}` : null;
@@ -115,14 +115,14 @@ Deno.serve(async (req: Request) => {
     <h1 style="margin:0 0 12px;font-size:20px;">Ekibe katılmaya davetlisin 🎉</h1>
     <p style="margin:0 0 4px;font-size:15px;line-height:1.5;color:#48454E;">
       <strong>${escapeHtml(inviterName)}</strong>, seni <strong>${escapeHtml(companyName)}</strong>
-      şirketine OfisNow üzerinde <strong>${escapeHtml(roleLabel)}</strong> olarak davet etti.
+      şirketine İkram X üzerinde <strong>${escapeHtml(roleLabel)}</strong> olarak davet etti.
     </p>
     ${
       inviteLink
         ? `${renderButton(inviteLink, "Daveti Kabul Et")}
            <p style="margin:16px 0 0;font-size:13px;color:#79747E;">Buton çalışmazsa bu bağlantıyı tarayıcına yapıştır:<br/>${inviteLink}</p>`
         : `<p style="margin:0 0 4px;font-size:15px;line-height:1.5;color:#48454E;">
-             OfisNow uygulamasını aç, "Davet Koduyla Katıl" seçeneğini seç ve aşağıdaki kodu gir:
+             İkram X uygulamasını aç, "Davet Koduyla Katıl" seçeneğini seç ve aşağıdaki kodu gir:
            </p>
            ${renderCodeBadge(token)}`
     }
@@ -133,7 +133,7 @@ Deno.serve(async (req: Request) => {
   try {
     await sendEmail({
       to: email,
-      subject: `${companyName} — OfisNow'a davet edildin`,
+      subject: `${companyName} — İkram X'e davet edildin`,
       html: renderEmailShell("Ekibe katılmaya davetlisin", bodyHtml, `${inviterName} seni ${companyName} ekibine davet etti.`),
     });
   } catch (err) {

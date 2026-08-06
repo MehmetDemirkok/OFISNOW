@@ -38,21 +38,22 @@ export function AccountCorner() {
   const [savingLocation, setSavingLocation] = useState(false);
 
   const isEmployee = profile?.role === "employee";
+  const canManageInvite = profile?.role === "employee" || profile?.role === "waiter";
   const {
     data: inviteCode,
     refetch: refetchInviteCode,
-  } = useAsyncData(() => (isEmployee ? fetchOrRotateInviteCode() : Promise.resolve(null)), [isEmployee]);
+  } = useAsyncData(() => (canManageInvite ? fetchOrRotateInviteCode() : Promise.resolve(null)), [canManageInvite]);
 
   // Davet kodu 10 dakikada bir kendiliğinden yenilenir; sheet her açıldığında da tazelenir.
   useEffect(() => {
-    if (!isEmployee) return;
+    if (!canManageInvite) return;
     const interval = setInterval(() => refetchInviteCode(), INVITE_CODE_REFRESH_MS);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEmployee]);
+  }, [canManageInvite]);
 
   useEffect(() => {
-    if (open && isEmployee) refetchInviteCode();
+    if (open && canManageInvite) refetchInviteCode();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
@@ -181,7 +182,7 @@ export function AccountCorner() {
 
                 <WebPushEnableRow />
 
-                {isEmployee && inviteCode ? (
+                {canManageInvite && inviteCode ? (
                   <Pressable style={styles.inviteRow} onPress={handleCopyInviteCode} hitSlop={4}>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.inviteLabel}>Davet Kodu (10 dk'da bir yenilenir)</Text>

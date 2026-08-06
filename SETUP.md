@@ -356,6 +356,25 @@ kullanır). Yalnızca `employee` rolündeki kullanıcılar davet gönderebilir.
 > doğrulanana kadar davetleri yalnızca Resend hesabına kayıtlı e-postaya
 > gönderebilirsiniz.
 
+## 12) Hesap Silme (App Store 5.1.1(v))
+
+Akış mevcut Auth + Resend altyapısını kullanır; ekstra tablo yok:
+
+1. İstemci `supabase.auth.reauthenticate()` çağırır → Auth Hook
+   (`send-auth-email`) Resend ile `reauthentication` kodu gönderir.
+2. Kullanıcı kodu girer → istemci `delete-account` Edge Function'ına
+   `{ code }` ile çağrı yapar.
+3. Fonksiyon kodu GoTrue `verify` (`type: reauthentication`) ile doğrular,
+   ardından service role ile `auth.users` siler (`profiles` CASCADE).
+
+```bash
+supabase functions deploy delete-account --project-ref fsksmdubigkzlsdmrebt
+supabase functions deploy send-auth-email --project-ref fsksmdubigkzlsdmrebt
+```
+
+> `RESEND_API_KEY` / `RESEND_FROM_EMAIL` adım 9'da tanımlı olmalıdır.
+> `SUPABASE_SERVICE_ROLE_KEY` Edge Function ortamında otomatik sağlanır.
+
 ## Notlar
 
 - `assets/sounds/new-order.wav` örnek/placeholder bir bildirim sesidir;
@@ -368,14 +387,31 @@ kullanır). Yalnızca `employee` rolündeki kullanıcılar davet gönderebilir.
   durumları (race condition) tek bir atomik `UPDATE` ile güvenle engellenir.
 
 
-## Demo hesapları
+## Demo hesapları (App Store Review)
 
-Şirket: **OfisNow Demo** — davet kodu: `4C56604A`
+Canlı DB sıfırlanıp yalnızca bu demo ortamı bırakıldı (2026-08-07).
 
-┌──────────┬─────────────────────┬───────────┐
-│   Rol    │       E-posta       │   Şifre   │
-├──────────┼─────────────────────┼───────────┤
-│ employee │ calisan@ofisnow.com │ Test1234! │
-├──────────┼─────────────────────┼───────────┤
-│ waiter   │ garson@ofisnow.com  │ Test1234! │
-└──────────┴─────────────────────┴───────────┘
+**Şirket:** Yıldız Plaza Ofis  
+**Davet kodu (sabit):** `YILDIZ01`  
+**Katalog:** 4 kategori · 17 ürün · 1 tamamlanmış + 1 aktif sipariş
+
+Roller net:
+- **Çalışan (employee)** — ofisten sipariş verir, geçmişini görür, görevli çağırır.
+- **Görevli (waiter)** — siparişleri karşılar, katalogu yönetir, ekibi davet eder.
+- Şirketi ilk kuran kişi görevli olarak başlar.
+
+| Rol | Ad | E-posta | Şifre |
+|-----|----|---------|-------|
+| Çalışan | Emre Kaya | `calisan@demo.ikramx.app` | `Test1234!` |
+| Görevli | Selin Yılmaz | `gorevli@demo.ikramx.app` | `Test1234!` |
+
+Her iki hesap e-posta onaylı; giriş API ile doğrulandı.
+
+### Review Notes — test scripti
+
+1. `calisan@demo.ikramx.app` ile giriş → Ana Sayfa → kategori → ürün ekle → sipariş ver  
+2. Çıkış → `gorevli@demo.ikramx.app` ile giriş → Siparişler → aktif siparişi gör → Gördüm / Tamamlandı  
+3. Görevli → Katalog → kategori/ürün gez / düzenle  
+4. (Opsiyonel) Hesabım → Arkadaşını Davet Et  
+
+Seed script: `supabase/seed-data/app-review-demo.sql`

@@ -128,7 +128,8 @@ function buildEmail(actionType: string, ctx: { token: string; verifyUrl: string 
           "Doğrulama kodu",
           `<h1 style="margin:0 0 12px;font-size:20px;">Kimliğini doğrula</h1>
            <p style="margin:0 0 4px;font-size:15px;line-height:1.5;color:#48454E;">
-             Bu işlemi tamamlamak için uygulamaya aşağıdaki kodu gir:
+             Hassas bir işlem (ör. hesap silme) için uygulamaya aşağıdaki kodu gir.
+             Bu isteği sen yapmadıysan e-postayı yok sayabilirsin.
            </p>
            ${renderCodeBadge(ctx.token)}`,
           `Doğrulama kodun: ${ctx.token}`

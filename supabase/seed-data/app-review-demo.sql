@@ -1,0 +1,18 @@
+-- İkram X / App Store Review demo seed (referans)
+-- Canlı ortam 2026-08-07 sıfırlandı; yalnızca bu demo bırakıldı.
+--
+-- Şirket : Yıldız Plaza Ofis
+-- Davet  : YILDIZ01
+-- Çalışan: calisan@demo.ikramx.app / Test1234!  (Emre Kaya, employee)
+-- Görevli: gorevli@demo.ikramx.app / Test1234!  (Selin Yılmaz, waiter)
+--
+-- Bu dosya dokümantasyon + yeniden kurulum referansıdır.
+-- Auth kullanıcıları SQL ile (invite/company_name metadata) oluşturulmalıdır;
+-- ardından katalog/sipariş seed'i uygulanır.
+
+-- Beklenen özet:
+--   companies = 1
+--   profiles  = 2 (1 employee + 1 waiter)
+--   categories = 4
+--   products   = 17
+--   orders     >= 2 (1 completed + 1 new)

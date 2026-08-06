@@ -66,17 +66,13 @@ export function AccountMenuScreen({ historyHref }: { historyHref: Href }) {
       iconColor: colors.onSecondaryContainer,
       iconBg: colors.secondaryContainer,
     },
-    ...(profile.role === "employee"
-      ? [
-          {
-            icon: "person-add" as const,
-            label: "Arkadaşını Davet Et",
-            onPress: () => router.push("/davet-et"),
-            iconColor: colors.primaryDark,
-            iconBg: colors.primaryLight,
-          },
-        ]
-      : []),
+    {
+      icon: "person-add" as const,
+      label: "Arkadaşını Davet Et",
+      onPress: () => router.push("/davet-et"),
+      iconColor: colors.primaryDark,
+      iconBg: colors.primaryLight,
+    },
     {
       icon: "support-agent",
       label: "Yardım ve Destek",

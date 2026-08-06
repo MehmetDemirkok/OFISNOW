@@ -94,7 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (fullName: string, email: string, password: string, company: SignUpCompanyInput) => {
       const metadata =
         company.mode === "create"
-          ? { full_name: fullName, company_name: company.companyName }
+          ? { full_name: fullName, company_name: company.companyName, role: "waiter" }
           : company.role === "employee"
             ? {
                 full_name: fullName,

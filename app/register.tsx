@@ -238,7 +238,7 @@ export default function RegisterScreen() {
                     returnKeyType="go"
                   />
                   <Text style={styles.hint}>
-                    Şirketi ilk sen kuruyorsun — katalog, konum ve davet kodu yönetimi otomatik olarak sende olacak.
+                    Şirketi ilk sen kuruyorsun — görevli olarak başlarsın; katalog, sipariş paneli ve ekip daveti sende olur. Ofis çalışanlarını davet ederek sipariş vermelerini sağlarsın.
                   </Text>
                 </View>
               ) : (
@@ -255,7 +255,7 @@ export default function RegisterScreen() {
                       returnKeyType="go"
                     />
                     <Text style={styles.hint}>
-                      Şirketindeki bir çalışandan aldığın davet kodunu gir — hangi şirketin çalışanı olduğunu
+                      Şirketindeki bir görevli veya çalışandan aldığın davet kodunu gir — hangi şirkete katıldığını
                       bu kod belirler.
                     </Text>
                   </View>

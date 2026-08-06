@@ -36,7 +36,9 @@ export default function InviteTeammateScreen() {
   const [sending, setSending] = useState(false);
 
   if (!profile) return null;
-  if (profile.role !== "employee") return <Redirect href="/(waiter)" />;
+  if (profile.role !== "employee" && profile.role !== "waiter") {
+    return <Redirect href="/" />;
+  }
 
   const trimmedEmail = email.trim();
   const canSend = EMAIL_PATTERN.test(trimmedEmail) && !sending;
@@ -122,8 +124,8 @@ export default function InviteTeammateScreen() {
             </View>
             <Text style={styles.hint}>
               {role === "waiter"
-                ? "Görevli, gelen siparişleri karşılayan saha personelidir."
-                : "Çalışan, sipariş oluşturan ve katalog/konum yönetimi yapabilen roldür."}
+                ? "Görevli; gelen siparişleri karşılar, katalogu yönetir."
+                : "Çalışan; ofisten sipariş verir, sipariş geçmişini görür."}
             </Text>
           </View>
 
